@@ -3,8 +3,8 @@ id,titulo,autor,genero,descricao,grau_minimo,arquivo,capa
 2,Diário de um Construtor do Templo,Z. Rodrix,História,Johaben: Diário de um Construtor do Templo,Mestre,conteudo/mestre/M01_DIário_de_um_Construtor_do_Templo.pdf,assets/M01_Diário_de_um_Construtor_do_Templo.png
 3,Reconstruindo o Templo,Z. Rodrix,História,Zorobabel: Reconstruindo o Templo,Mestre,conteudo/mestre/M02_Reconstruindo_o_Templo.pdf,assets/M02_Reconstruindo_o_Templo.png
 4,História e Mistério dos Templários,Pedro Silva,História,História e Mistérios dos Templários,Aprendiz,conteudo/aprendiz/A02_Historia_e_Misterios_dos_Templarios.pdf,assets/A02_Historia_e_Misterios_dos_Templarios.png
-5,A Liderança e o Venerável,Ir.’. Anatoli Oliynik ,Trabalho,A Liderança e o Venerável,Companheiro,conteudo/companheiro/C01_A_Liderança_e_o_Venerável.pdf,
-6,13 de Maio: A Maçonaria e a Abolição da Escravatura,Autor Desconhecido,Trabalho,A Maçonaria e a Abolição da Escravatura,Aprendiz,conteudo/aprendiz/A03_A Maçonaria e a Abolição da Escravatura - Carlos Nobre.pdf,
+5,A Liderança e o Venerável,Ir.’. Anatoli Oliynik ,Trabalho,A Liderança e o Venerável,Companheiro,conteudo/companheiro/C01_A_Liderança_e_o_Venerável.pdf,assets/C01.png
+6,13 de Maio: A Maçonaria e a Abolição da Escravatura,Autor Desconhecido,Trabalho,A Maçonaria e a Abolição da Escravatura,Aprendiz,conteudo/aprendiz/A03_A Maçonaria e a Abolição da Escravatura - Carlos Nobre.pdf,assets.A03.png
 7,O Aprendiz - Maçom,Henrique Valadares,Ritualística,1904 - O Aprendiz Maçom,Aprendiz,conteudo/aprendiz/A04_O Aprendiz Maçom.pdf,assets/A04_O Aprendiz Maçom.png
 9,A Ordem dos Templários,Vanildo de Senna,História,A Ordem dos Templários,Aprendiz,conteudo/aprendiz/A05_A Ordem dos Templários.pdf,assets/A05_A Ordem dos Templários.png
 10,A Maçonaria Operativa,Nicola Aslan,História,A Maçonaria Operativa,Companheiro,conteudo/companheiro/C02_A Maçonaria Operativa.pdf,assets/C02_A Maçonaria Operativa.png
