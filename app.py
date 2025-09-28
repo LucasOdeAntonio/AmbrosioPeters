@@ -1,3 +1,4 @@
+# app.py
 import os
 from pathlib import Path
 import pandas as pd
@@ -18,54 +19,75 @@ CONFIG_PATH = BASE_DIR / "auth_config.yaml"
 CONTEUDO_DIR = BASE_DIR / "conteudo"
 ASSETS_DIR = BASE_DIR / "assets"
 
-# arquivo prioritário informado por você:
-CAPA_PADRAO = ASSETS_DIR / "LOGO.png"
-# outras variantes aceitáveis (sem acento / underscore / hífen)
-CAPA_CANDIDATAS = [
-    CAPA_PADRAO,
-    ASSETS_DIR / "Ambrosio Peters.png",
-    ASSETS_DIR / "ambrosio_peters.png",
-    ASSETS_DIR / "ambrosio-peters.png",
-]
-
-# Se True, ignora qualquer "capa" do CSV e usa SEMPRE a capa padrão
-ALWAYS_USE_DEFAULT_COVER = False
-
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
 
 st.set_page_config(page_title=APP_TITLE, page_icon="📚", layout="wide")
 
 # ==========================
-# Utilitários de imagem (agora sempre PIL.Image)
+# Utilitários de imagem (PIL)
 # ==========================
 def is_valid_image_file(p: Path) -> bool:
     if not p or not p.is_file():
         return False
     try:
         with Image.open(p) as im:
-            im.verify()  # valida header/estrutura
+            im.verify()
         return True
     except Exception:
         return False
 
-def pil_from_path(p: Path):
-    """Abre imagem como PIL.Image (cópia carregada em memória). Retorna None se inválida."""
+def pil_from_path(p: Path) -> Image.Image | None:
     if not is_valid_image_file(p):
         return None
     try:
         with Image.open(p) as im:
-            return im.copy()  # carrega em memória e fecha o arquivo
+            return im.copy()
     except Exception:
         return None
 
-def pil_fallback(width=600, height=340, color=(240, 240, 240)):
-    """Imagem neutra em memória."""
+def pil_fallback(width=600, height=340, color=(240, 240, 240)) -> Image.Image:
     return Image.new("RGB", (width, height), color)
 
-def default_cover_pil():
-    """Seleciona a primeira capa candidata válida; senão, fallback neutro."""
-    for p in CAPA_CANDIDATAS:
+def normalize_catalog_path(raw: str) -> Path:
+    """
+    Normaliza o texto vindo do CSV (coluna 'capa' OU 'arquivo') em um Path local.
+    - troca '\' por '/'
+    - corrige 'assets.' -> 'assets/' (erro comum)
+    - remove './' inicial
+    - se for relativo, ancora em BASE_DIR
+    - fallback: tenta ASSETS_DIR/<nome_arquivo>
+    """
+    if not raw:
+        return Path("__INVALID__")
+    s = str(raw).strip()
+    s = s.replace("\\", "/")
+    if s.startswith("assets."):
+        s = s.replace("assets.", "assets/", 1)
+    if s.startswith("./"):
+        s = s[2:]
+
+    p = Path(s)
+    if not p.is_absolute():
+        p = BASE_DIR / s
+
+    if p.is_file():
+        return p
+
+    # fallback para assets/<nome>
+    alt = ASSETS_DIR / Path(s).name
+    if alt.is_file():
+        return alt
+
+    return Path("__INVALID__")
+
+def cover_from_csv(capa_field: str | None) -> Image.Image:
+    """
+    SEMPRE usa o caminho informado na coluna 'capa' do CSV.
+    Se inválido/inexistente, retorna placeholder.
+    """
+    p = normalize_catalog_path(capa_field or "")
+    if p.name != "__INVALID__":
         img = pil_from_path(p)
         if img is not None:
             return img
@@ -82,19 +104,20 @@ def atomic_write_csv(df: pd.DataFrame, path: Path) -> None:
 
 @st.cache_data
 def load_catalogo(path: Path) -> pd.DataFrame:
-    REQUIRED_COLS = ["id", "titulo", "autor", "genero", "descricao", "grau_minimo", "arquivo", "capa"]
+    REQUIRED_COLS = ["id", "titulo", "autor", "genero", "descricao",
+                     "grau_minimo", "arquivo", "capa"]
 
     def write_template(p: Path):
         p.parent.mkdir(parents=True, exist_ok=True)
         df_start = pd.DataFrame(columns=REQUIRED_COLS)
         atomic_write_csv(df_start, p)
 
-    # 1) cria se não existir OU se tiver 0 bytes
+    # cria se não existir ou arquivo vazio
     if not path.exists() or path.stat().st_size == 0:
         write_template(path)
         return pd.read_csv(path)
 
-    # 2) tenta ler com encodings/separadores comuns (NÃO sobrescreve se falhar)
+    # tenta ler com vários encodings/separadores
     df = None
     for enc in ("utf-8", "utf-8-sig", "latin-1"):
         for sep in (None, ",", ";", "\t"):
@@ -110,21 +133,24 @@ def load_catalogo(path: Path) -> pd.DataFrame:
         st.error("Não foi possível ler 'data/catalogo.csv'. Exibindo catálogo vazio para não sobrescrever seu arquivo.")
         return pd.DataFrame(columns=REQUIRED_COLS)
 
-    # 3) garante colunas obrigatórias (sem apagar conteúdo)
+    # garante colunas obrigatórias
     missing = [c for c in REQUIRED_COLS if c not in df.columns]
     for c in missing:
         df[c] = ""
+
+    # mantém apenas as colunas na ordem esperada
     df = df[REQUIRED_COLS]
     return df
 
 @st.cache_data
 def load_config(path: Path) -> dict:
     if not path.exists():
+        st.error("Arquivo 'auth_config.yaml' não encontrado.")
         st.stop()
     with open(path, "r", encoding="utf-8") as f:
         return yaml.load(f, Loader=SafeLoader)
 
-def get_user_role(config: dict, username: str, name: str = None, email: str = None) -> str:
+def get_user_role(config: dict, username: str, name: str | None = None, email: str | None = None) -> str:
     try:
         users = config["credentials"]["usernames"]
     except Exception:
@@ -238,11 +264,7 @@ ensure_dirs()
 # ==========================
 df = load_catalogo(CATALOGO_PATH)
 
-# Ignora capas do CSV se a flag estiver ativa (usa sempre a capa padrão)
-if ALWAYS_USE_DEFAULT_COVER and not df.empty:
-    df["capa"] = ""
-
-# Normaliza o grau_minimo e aplica filtro por papel
+# Normaliza valores de grau_minimo e filtra por papel
 if not df.empty:
     df["grau_minimo"] = (
         df["grau_minimo"]
@@ -253,9 +275,6 @@ if not df.empty:
         .fillna("Mestre")
     )
     df = df[df["grau_minimo"].apply(lambda g: allowed_by_role(user_role, str(g)))]
-
-# Pré-carrega a capa padrão como PIL.Image (uma vez)
-DEFAULT_COVER = default_cover_pil()
 
 # ==========================
 # Barra superior / filtros
@@ -289,19 +308,8 @@ else:
     base = df
 
 # ==========================
-# Render "estilo streaming"
+# Renderização dos cards
 # ==========================
-def resolve_cover_pil(capa_field: str | None):
-    """Resolve PIL.Image da capa do item ou a padrão."""
-    if ALWAYS_USE_DEFAULT_COVER:
-        return DEFAULT_COVER
-    if capa_field:
-        p = Path(str(capa_field)).resolve()
-        img = pil_from_path(p)
-        if img is not None:
-            return img
-    return DEFAULT_COVER if DEFAULT_COVER else pil_fallback()
-
 if base.empty:
     st.warning("Nenhum conteúdo disponível para o seu grau ou filtros aplicados.")
 else:
@@ -316,8 +324,8 @@ else:
             for col, item in zip(cols, row):
                 with col:
                     with st.container(border=True):
-                        # Capa (sempre PIL.Image)
-                        cover_img = resolve_cover_pil(item.get("capa"))
+                        # Capa lida EXCLUSIVAMENTE do CSV
+                        cover_img = cover_from_csv(item.get("capa"))
                         st.image(cover_img, use_container_width=True)
 
                         # Informações
@@ -327,11 +335,15 @@ else:
                             desc = str(item["descricao"])
                             st.write(desc[:180] + ("..." if len(desc) > 180 else ""))
 
-                        # Download
-                        caminho = Path(str(item.get("arquivo", ""))).resolve()
-                        if caminho.is_file():
-                            with open(caminho, "rb") as f:
-                                st.download_button("📥 Baixar", data=f.read(), file_name=caminho.name)
+                        # Download do arquivo
+                        arquivo_path = normalize_catalog_path(item.get("arquivo", ""))
+                        if arquivo_path.name != "__INVALID__" and arquivo_path.is_file():
+                            with open(arquivo_path, "rb") as f:
+                                st.download_button(
+                                    "📥 Baixar",
+                                    data=f.read(),
+                                    file_name=arquivo_path.name
+                                )
                         else:
                             st.button("Arquivo indisponível", disabled=True)
         st.divider()
@@ -356,7 +368,7 @@ if user_role == "mestre":
                 type=["pdf", "docx", "doc", "txt", "pptx", "xlsx"],
                 accept_multiple_files=False,
             )
-            capa = st.file_uploader("Capa (opcional, PNG/JPG)", type=["png", "jpg", "jpeg"], accept_multiple_files=False)
+            capa = st.file_uploader("Capa (PNG/JPG) — será gravada e usada no CSV", type=["png", "jpg", "jpeg"], accept_multiple_files=False)
             submitted = st.form_submit_button("Salvar")
 
         if submitted:
@@ -367,26 +379,30 @@ if user_role == "mestre":
                 pasta = CONTEUDO_DIR / grau_minimo.lower()
                 pasta.mkdir(parents=True, exist_ok=True)
 
+                # salva o arquivo de conteúdo
                 nome_seguro = safe_filename(arquivo.name)
                 destino = pasta / nome_seguro
                 with open(destino, "wb") as f:
                     f.write(arquivo.getbuffer())
 
+                # salva a capa SEMPRE em assets/ e grava caminho RELATIVO no CSV
                 capa_destino = ""
-                if capa is not None and not ALWAYS_USE_DEFAULT_COVER:
+                if capa is not None:
+                    ASSETS_DIR.mkdir(parents=True, exist_ok=True)
                     capa_nome = safe_filename(capa.name)
                     capa_destino_path = ASSETS_DIR / capa_nome
                     with open(capa_destino_path, "wb") as f:
                         f.write(capa.getbuffer())
                     if is_valid_image_file(capa_destino_path):
-                        capa_destino = str(capa_destino_path).replace("\\", "/")
+                        capa_destino = f"assets/{capa_nome}"
                     else:
                         try:
                             capa_destino_path.unlink(missing_ok=True)
                         except Exception:
                             pass
-                        st.warning("A capa enviada não parece ser uma imagem válida. Usaremos a capa padrão.")
+                        st.warning("A capa enviada não parece ser uma imagem válida. Um placeholder será exibido.")
 
+                # atualiza o catálogo
                 df_atual = load_catalogo(CATALOGO_PATH).copy()
                 for c in ["id","titulo","autor","genero","descricao","grau_minimo","arquivo","capa"]:
                     if c not in df_atual.columns:
@@ -401,7 +417,7 @@ if user_role == "mestre":
                     "descricao": descricao,
                     "grau_minimo": grau_minimo,
                     "arquivo": str(destino).replace("\\", "/"),
-                    "capa": capa_destino if not ALWAYS_USE_DEFAULT_COVER else "",
+                    "capa": capa_destino,  # EXCLUSIVO: o que for gravado aqui será usado na vitrine
                 }
                 df_atual = pd.concat([df_atual, pd.DataFrame([nova_linha])], ignore_index=True)
                 atomic_write_csv(df_atual, CATALOGO_PATH)
@@ -418,7 +434,9 @@ if user_role == "mestre":
 else:
     st.info("Área de gestão disponível apenas para Mestres.")
 
+# ==========================
 # Rodapé
+# ==========================
 st.markdown(
     """
     ---
