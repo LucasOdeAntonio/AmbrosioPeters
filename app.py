@@ -18,9 +18,6 @@ CATALOGO_PATH = BASE_DIR / "data" / "catalogo.csv"
 CONFIG_PATH = BASE_DIR / "auth_config.yaml"
 CONTEUDO_DIR = BASE_DIR / "conteudo"
 ASSETS_DIR = BASE_DIR / "assets"
-# DEBUG TEMPORÁRIO
-p = BASE_DIR/".streamlit"/"config.toml"
-st.caption(f"Theme config: {p} → {'OK' if p.exists() else 'NÃO ENCONTRADO'}")
 
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
