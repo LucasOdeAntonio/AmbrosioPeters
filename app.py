@@ -29,7 +29,7 @@ CAPA_CANDIDATAS = [
 ]
 
 # Se True, ignora qualquer "capa" do CSV e usa SEMPRE a capa padrão
-ALWAYS_USE_DEFAULT_COVER = False
+ALWAYS_USE_DEFAULT_COVER = True
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
@@ -37,50 +37,44 @@ GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
 st.set_page_config(page_title=APP_TITLE, page_icon="📚", layout="wide")
 
 # ==========================
-# Utilitários de imagem (SEM passar caminho ao st.image)
+# Utilitários de imagem (agora sempre PIL.Image)
 # ==========================
 def is_valid_image_file(p: Path) -> bool:
-    """Verifica se o caminho aponta para uma imagem válida."""
     if not p or not p.is_file():
         return False
     try:
         with Image.open(p) as im:
-            im.verify()
+            im.verify()  # valida header/estrutura
         return True
     except Exception:
         return False
 
-def image_bytes_from_path(p: Path) -> bytes | None:
-    """Lê a imagem do disco e devolve bytes se for válida; caso contrário, None."""
+def pil_from_path(p: Path):
+    """Abre imagem como PIL.Image (cópia carregada em memória). Retorna None se inválida."""
     if not is_valid_image_file(p):
         return None
     try:
-        return p.read_bytes()
+        with Image.open(p) as im:
+            return im.copy()  # carrega em memória e fecha o arquivo
     except Exception:
         return None
 
-def fallback_bytes(width: int = 600, height: int = 340) -> bytes:
-    """Gera uma imagem cinza em memória (bytes PNG)."""
-    buf = BytesIO()
-    Image.new("RGB", (width, height), (240, 240, 240)).save(buf, format="PNG")
-    return buf.getvalue()
+def pil_fallback(width=600, height=340, color=(240, 240, 240)):
+    """Imagem neutra em memória."""
+    return Image.new("RGB", (width, height), color)
 
-def default_cover_bytes() -> bytes:
-    """
-    Tenta as candidatas na ordem. Se nenhuma existir/for válida,
-    devolve uma imagem neutra em memória.
-    """
+def default_cover_pil():
+    """Seleciona a primeira capa candidata válida; senão, fallback neutro."""
     for p in CAPA_CANDIDATAS:
-        b = image_bytes_from_path(p)
-        if b:
-            return b
-    return fallback_bytes()
+        img = pil_from_path(p)
+        if img is not None:
+            return img
+    return pil_fallback()
 
 # ==========================
 # Utilitários gerais
 # ==========================
 def atomic_write_csv(df: pd.DataFrame, path: Path) -> None:
-    """Escrita atômica para evitar truncamentos (escreve .tmp e substitui)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     df.to_csv(tmp, index=False)
@@ -120,7 +114,6 @@ def load_catalogo(path: Path) -> pd.DataFrame:
     missing = [c for c in REQUIRED_COLS if c not in df.columns]
     for c in missing:
         df[c] = ""
-    # reordena só em memória
     df = df[REQUIRED_COLS]
     return df
 
@@ -132,26 +125,19 @@ def load_config(path: Path) -> dict:
         return yaml.load(f, Loader=SafeLoader)
 
 def get_user_role(config: dict, username: str, name: str = None, email: str = None) -> str:
-    """
-    Descobre o role a partir de múltiplas chaves (username/email/name),
-    pois versões do streamlit-authenticator variam como populam session_state.
-    """
     try:
         users = config["credentials"]["usernames"]
     except Exception:
         return "aprendiz"
 
-    # 1) pela chave (username) exatamente como no YAML
     if username and username in users:
         return users[username].get("role", "aprendiz").lower()
 
-    # 2) por e-mail
     if email:
         for _, udata in users.items():
             if str(udata.get("email", "")).strip().lower() == str(email).strip().lower():
                 return udata.get("role", "aprendiz").lower()
 
-    # 3) por name (nome exibido)
     if name:
         for _, udata in users.items():
             if str(udata.get("name", "")).strip().lower() == str(name).strip().lower():
@@ -166,7 +152,6 @@ def ensure_dirs():
     ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     for d in [CONTEUDO_DIR / "aprendiz", CONTEUDO_DIR / "companheiro", CONTEUDO_DIR / "mestre"]:
         d.mkdir(parents=True, exist_ok=True)
-    # Não criamos/gravamos imagem aqui; exibimos via bytes com fallback em runtime.
 
 def safe_filename(name: str) -> str:
     keep = [c if c.isalnum() or c in ("-", "_", ".", " ") else "_" for c in name]
@@ -177,7 +162,6 @@ def safe_filename(name: str) -> str:
 # ==========================
 config = load_config(CONFIG_PATH)
 
-# Em algumas versões, o construtor aceita kwargs; em outras é posicional.
 try:
     authenticator = stauth.Authenticate(
         credentials=config["credentials"],
@@ -194,7 +178,6 @@ except TypeError:
     )
 
 def do_login_compat():
-    """Tenta login nos formatos novos e antigos. Retorna (name, auth_status, username)."""
     try:
         ret = authenticator.login(location="sidebar")
         if isinstance(ret, tuple) and len(ret) == 3:
@@ -228,7 +211,6 @@ elif auth_status is None:
     st.info("Informe usuário e senha para acessar o repositório.")
     st.stop()
 
-# Usuário autenticado
 email = st.session_state.get("email")
 user_role = get_user_role(config, username, name=name, email=email)
 
@@ -272,8 +254,8 @@ if not df.empty:
     )
     df = df[df["grau_minimo"].apply(lambda g: allowed_by_role(user_role, str(g)))]
 
-# Pré-carrega a capa padrão em bytes (uma vez)
-DEFAULT_COVER = default_cover_bytes()
+# Pré-carrega a capa padrão como PIL.Image (uma vez)
+DEFAULT_COVER = default_cover_pil()
 
 # ==========================
 # Barra superior / filtros
@@ -309,21 +291,16 @@ else:
 # ==========================
 # Render "estilo streaming"
 # ==========================
-def resolve_cover_bytes(capa_field: str | None) -> bytes:
-    """Resolve bytes da capa do item ou da padrão, com fallback seguro."""
+def resolve_cover_pil(capa_field: str | None):
+    """Resolve PIL.Image da capa do item ou a padrão."""
     if ALWAYS_USE_DEFAULT_COVER:
         return DEFAULT_COVER
-    # tenta capa do item
     if capa_field:
         p = Path(str(capa_field)).resolve()
-        b = image_bytes_from_path(p)
-        if b:
-            return b
-    # cai para padrão
-    if DEFAULT_COVER:
-        return DEFAULT_COVER
-    # último recurso
-    return fallback_bytes()
+        img = pil_from_path(p)
+        if img is not None:
+            return img
+    return DEFAULT_COVER if DEFAULT_COVER else pil_fallback()
 
 if base.empty:
     st.warning("Nenhum conteúdo disponível para o seu grau ou filtros aplicados.")
@@ -339,9 +316,9 @@ else:
             for col, item in zip(cols, row):
                 with col:
                     with st.container(border=True):
-                        # Capa (sempre bytes; nunca caminho)
-                        cover_bytes = resolve_cover_bytes(item.get("capa"))
-                        st.image(cover_bytes, use_container_width=True)
+                        # Capa (sempre PIL.Image)
+                        cover_img = resolve_cover_pil(item.get("capa"))
+                        st.image(cover_img, use_container_width=True)
 
                         # Informações
                         st.markdown(f"**{item['titulo']}**")
@@ -397,7 +374,6 @@ if user_role == "mestre":
 
                 capa_destino = ""
                 if capa is not None and not ALWAYS_USE_DEFAULT_COVER:
-                    # Só salva capa individual se não estivermos forçando a capa padrão
                     capa_nome = safe_filename(capa.name)
                     capa_destino_path = ASSETS_DIR / capa_nome
                     with open(capa_destino_path, "wb") as f:
@@ -412,7 +388,6 @@ if user_role == "mestre":
                         st.warning("A capa enviada não parece ser uma imagem válida. Usaremos a capa padrão.")
 
                 df_atual = load_catalogo(CATALOGO_PATH).copy()
-                # garante colunas (defensivo)
                 for c in ["id","titulo","autor","genero","descricao","grau_minimo","arquivo","capa"]:
                     if c not in df_atual.columns:
                         df_atual[c] = ""
@@ -429,8 +404,6 @@ if user_role == "mestre":
                     "capa": capa_destino if not ALWAYS_USE_DEFAULT_COVER else "",
                 }
                 df_atual = pd.concat([df_atual, pd.DataFrame([nova_linha])], ignore_index=True)
-
-                # escrita atômica
                 atomic_write_csv(df_atual, CATALOGO_PATH)
 
                 st.success("Trabalho salvo com sucesso!")
