@@ -19,7 +19,7 @@ CONTEUDO_DIR = BASE_DIR / "conteudo"
 ASSETS_DIR = BASE_DIR / "assets"
 
 # arquivo prioritário informado por você:
-CAPA_PADRAO = ASSETS_DIR / "Ambrósio Peters.png"
+CAPA_PADRAO = ASSETS_DIR / "LOGO.png"
 # outras variantes aceitáveis (sem acento / underscore / hífen)
 CAPA_CANDIDATAS = [
     CAPA_PADRAO,
