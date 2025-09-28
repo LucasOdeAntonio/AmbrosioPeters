@@ -326,7 +326,7 @@ else:
                     with st.container(border=True):
                         # Capa lida EXCLUSIVAMENTE do CSV
                         cover_img = cover_from_csv(item.get("capa"))
-                        st.image(cover_img, use_container_width=True)
+                        st.image(cover_img, use_column_width=True)
 
                         # Informações
                         st.markdown(f"**{item['titulo']}**")
