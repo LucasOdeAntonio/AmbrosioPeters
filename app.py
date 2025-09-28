@@ -17,10 +17,19 @@ CATALOGO_PATH = BASE_DIR / "data" / "catalogo.csv"
 CONFIG_PATH = BASE_DIR / "auth_config.yaml"
 CONTEUDO_DIR = BASE_DIR / "conteudo"
 ASSETS_DIR = BASE_DIR / "assets"
-CAPA_PADRAO = ASSETS_DIR / "Ambrósio Peters.png"  # capa padrão da Loja
 
-# Se True, ignora qualquer "capa" do CSV e usa SEMPRE a CAPA_PADRAO
-ALWAYS_USE_DEFAULT_COVER = False
+# arquivo prioritário informado por você:
+CAPA_PADRAO = ASSETS_DIR / "Ambrósio Peters.png"
+# outras variantes aceitáveis (sem acento / underscore / hífen)
+CAPA_CANDIDATAS = [
+    CAPA_PADRAO,
+    ASSETS_DIR / "Ambrosio Peters.png",
+    ASSETS_DIR / "ambrosio_peters.png",
+    ASSETS_DIR / "ambrosio-peters.png",
+]
+
+# Se True, ignora qualquer "capa" do CSV e usa SEMPRE a capa padrão
+ALWAYS_USE_DEFAULT_COVER = True
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
@@ -28,10 +37,10 @@ GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
 st.set_page_config(page_title=APP_TITLE, page_icon="📚", layout="wide")
 
 # ==========================
-# Utilitários
+# Utilitários de imagem (SEM passar caminho ao st.image)
 # ==========================
-def is_valid_image(p: Path) -> bool:
-    """Verifica se o arquivo é uma imagem válida."""
+def is_valid_image_file(p: Path) -> bool:
+    """Verifica se o caminho aponta para uma imagem válida."""
     if not p or not p.is_file():
         return False
     try:
@@ -41,12 +50,35 @@ def is_valid_image(p: Path) -> bool:
     except Exception:
         return False
 
-def make_fallback_image_bytes(width: int = 600, height: int = 340) -> bytes:
-    """Gera uma imagem neutra em memória para fallback."""
+def image_bytes_from_path(p: Path) -> bytes | None:
+    """Lê a imagem do disco e devolve bytes se for válida; caso contrário, None."""
+    if not is_valid_image_file(p):
+        return None
+    try:
+        return p.read_bytes()
+    except Exception:
+        return None
+
+def fallback_bytes(width: int = 600, height: int = 340) -> bytes:
+    """Gera uma imagem cinza em memória (bytes PNG)."""
     buf = BytesIO()
     Image.new("RGB", (width, height), (240, 240, 240)).save(buf, format="PNG")
     return buf.getvalue()
 
+def default_cover_bytes() -> bytes:
+    """
+    Tenta as candidatas na ordem. Se nenhuma existir/for válida,
+    devolve uma imagem neutra em memória.
+    """
+    for p in CAPA_CANDIDATAS:
+        b = image_bytes_from_path(p)
+        if b:
+            return b
+    return fallback_bytes()
+
+# ==========================
+# Utilitários gerais
+# ==========================
 def atomic_write_csv(df: pd.DataFrame, path: Path) -> None:
     """Escrita atômica para evitar truncamentos (escreve .tmp e substitui)."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -69,15 +101,13 @@ def load_catalogo(path: Path) -> pd.DataFrame:
         return pd.read_csv(path)
 
     # 2) tenta ler com encodings/separadores comuns (NÃO sobrescreve se falhar)
-    tried = []
     df = None
     for enc in ("utf-8", "utf-8-sig", "latin-1"):
         for sep in (None, ",", ";", "\t"):
             try:
                 df = pd.read_csv(path, sep=sep, engine="python", encoding=enc)
-                break  # leu
-            except Exception as e:
-                tried.append(f"{enc}/{sep}: {e}")
+                break
+            except Exception:
                 df = None
         if df is not None:
             break
@@ -94,14 +124,12 @@ def load_catalogo(path: Path) -> pd.DataFrame:
     df = df[REQUIRED_COLS]
     return df
 
-
 @st.cache_data
 def load_config(path: Path) -> dict:
     if not path.exists():
         st.stop()
     with open(path, "r", encoding="utf-8") as f:
         return yaml.load(f, Loader=SafeLoader)
-
 
 def get_user_role(config: dict, username: str, name: str = None, email: str = None) -> str:
     """
@@ -119,38 +147,30 @@ def get_user_role(config: dict, username: str, name: str = None, email: str = No
 
     # 2) por e-mail
     if email:
-        for ukey, udata in users.items():
+        for _, udata in users.items():
             if str(udata.get("email", "")).strip().lower() == str(email).strip().lower():
                 return udata.get("role", "aprendiz").lower()
 
     # 3) por name (nome exibido)
     if name:
-        for ukey, udata in users.items():
+        for _, udata in users.items():
             if str(udata.get("name", "")).strip().lower() == str(name).strip().lower():
                 return udata.get("role", "aprendiz").lower()
 
     return "aprendiz"
 
-
 def allowed_by_role(user_role: str, grau_minimo: str) -> bool:
     return ROLE_LEVEL.get(user_role, 1) >= GRAU_LEVEL.get(grau_minimo, 3)
-
 
 def ensure_dirs():
     ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     for d in [CONTEUDO_DIR / "aprendiz", CONTEUDO_DIR / "companheiro", CONTEUDO_DIR / "mestre"]:
         d.mkdir(parents=True, exist_ok=True)
-    # (re)cria capa padrão se não existir ou se estiver inválida
-    if not CAPA_PADRAO.exists() or not is_valid_image(CAPA_PADRAO):
-        # cria uma imagem neutra para não quebrar; quando você subir a oficial, ela substitui
-        fallback = Image.new("RGB", (600, 340), (240, 240, 240))
-        fallback.save(CAPA_PADRAO)
-
+    # Não criamos/gravamos imagem aqui; exibimos via bytes com fallback em runtime.
 
 def safe_filename(name: str) -> str:
     keep = [c if c.isalnum() or c in ("-", "_", ".", " ") else "_" for c in name]
     return "".join(keep)
-
 
 # ==========================
 # Autenticação (compat múltiplas versões)
@@ -174,11 +194,7 @@ except TypeError:
     )
 
 def do_login_compat():
-    """
-    Tenta login nos formatos novos e antigos.
-    Retorna (name, auth_status, username)
-    """
-    # 1) Tentativa: API nova (renderiza e usa session_state)
+    """Tenta login nos formatos novos e antigos. Retorna (name, auth_status, username)."""
     try:
         ret = authenticator.login(location="sidebar")
         if isinstance(ret, tuple) and len(ret) == 3:
@@ -189,11 +205,9 @@ def do_login_compat():
             st.session_state.get("username"),
         )
     except TypeError:
-        # 2) Tentativa: API antiga com argumentos posicionais
         try:
             return authenticator.login("Entrar", "sidebar")
         except TypeError:
-            # 3) Último recurso: um argumento só (algumas variantes)
             ret = authenticator.login("Entrar")
             if isinstance(ret, tuple) and len(ret) == 3:
                 return ret
@@ -258,6 +272,9 @@ if not df.empty:
     )
     df = df[df["grau_minimo"].apply(lambda g: allowed_by_role(user_role, str(g)))]
 
+# Pré-carrega a capa padrão em bytes (uma vez)
+DEFAULT_COVER = default_cover_bytes()
+
 # ==========================
 # Barra superior / filtros
 # ==========================
@@ -292,6 +309,22 @@ else:
 # ==========================
 # Render "estilo streaming"
 # ==========================
+def resolve_cover_bytes(capa_field: str | None) -> bytes:
+    """Resolve bytes da capa do item ou da padrão, com fallback seguro."""
+    if ALWAYS_USE_DEFAULT_COVER:
+        return DEFAULT_COVER
+    # tenta capa do item
+    if capa_field:
+        p = Path(str(capa_field)).resolve()
+        b = image_bytes_from_path(p)
+        if b:
+            return b
+    # cai para padrão
+    if DEFAULT_COVER:
+        return DEFAULT_COVER
+    # último recurso
+    return fallback_bytes()
+
 if base.empty:
     st.warning("Nenhum conteúdo disponível para o seu grau ou filtros aplicados.")
 else:
@@ -306,26 +339,9 @@ else:
             for col, item in zip(cols, row):
                 with col:
                     with st.container(border=True):
-                        # Capa específica ou padrão, com validação forte
-                        capa_raw = "" if ALWAYS_USE_DEFAULT_COVER else str(item.get("capa", "")).strip()
-                        capa_path = Path(capa_raw).resolve() if capa_raw else None
-
-                        def can_show(p: Path) -> bool:
-                            if not p or not p.is_file():
-                                return False
-                            try:
-                                with Image.open(p) as im:
-                                    im.verify()
-                                return True
-                            except Exception:
-                                return False
-
-                        if can_show(capa_path):
-                            st.image(str(capa_path), use_container_width=True)
-                        elif can_show(CAPA_PADRAO):
-                            st.image(str(CAPA_PADRAO), use_container_width=True)
-                        else:
-                            st.image(make_fallback_image_bytes(), use_container_width=True)
+                        # Capa (sempre bytes; nunca caminho)
+                        cover_bytes = resolve_cover_bytes(item.get("capa"))
+                        st.image(cover_bytes, use_container_width=True)
 
                         # Informações
                         st.markdown(f"**{item['titulo']}**")
@@ -386,7 +402,7 @@ if user_role == "mestre":
                     capa_destino_path = ASSETS_DIR / capa_nome
                     with open(capa_destino_path, "wb") as f:
                         f.write(capa.getbuffer())
-                    if is_valid_image(capa_destino_path):
+                    if is_valid_image_file(capa_destino_path):
                         capa_destino = str(capa_destino_path).replace("\\", "/")
                     else:
                         try:
