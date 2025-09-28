@@ -1,6 +1,6 @@
 [theme]
-primaryColor="#B91C1C"
-backgroundColor="#adafb5ff"
-secondaryBackgroundColor="#ac6f6fff"
-textColor="#000000ff"
-font="sans serif"
+primaryColor = "#9B1C1C"         # vermelho profundo (ação primária)
+backgroundColor = "#F7FAFC"      # fundo claro
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#0F172A"            # texto azul-acinzentado
+font = "sans serif"
