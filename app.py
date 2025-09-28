@@ -18,6 +18,10 @@ CATALOGO_PATH = BASE_DIR / "data" / "catalogo.csv"
 CONFIG_PATH = BASE_DIR / "auth_config.yaml"
 CONTEUDO_DIR = BASE_DIR / "conteudo"
 ASSETS_DIR = BASE_DIR / "assets"
+# DEBUG TEMPORÁRIO
+p = BASE_DIR/".streamlit"/"config.toml"
+st.caption(f"Theme config: {p} → {'OK' if p.exists() else 'NÃO ENCONTRADO'}")
+
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
@@ -27,8 +31,14 @@ st.set_page_config(page_title=APP_TITLE, page_icon="📚", layout="wide")
 # ---- Estilos leves (cores seguem o tema do config.toml) ----
 st.markdown("""
 <style>
+:root{
+  --york-bg:#0B1020; --york-bg2:#0F172A; --york-text:#E5E7EB; --york-primary:#B91C1C;
+}
+/* Fallback caso o theme não aplique (não briga se o theme vier) */
+[data-testid="stAppViewContainer"] { background-color: var(--york-bg); }
+[data-testid="stSidebar"] { background-color: var(--york-bg2); }
 .block-container { padding-top: 1.2rem; }
-[data-testid="stHeader"] { background: transparent; }
+[data-testid="stHeader"] { background: transparent; color: var(--york-text); }
 
 /* Card visual */
 .york-card{
@@ -41,20 +51,25 @@ st.markdown("""
   display: flex;
   flex-direction: column;
   gap: .45rem;
+  color: var(--york-text);
 }
 
 /* Imagem com altura fixa = cards alinhados */
 .york-card img{
   width: 100%;
-  height: 160px;            /* ajuste aqui se quiser maior/menor */
+  height: 180px;              /* ajuste aqui se quiser maior/menor */
   object-fit: cover;
   border-radius: 10px;
 }
 
-/* Chips de grau/gênero */
+/* Chips de grau/gênero (com altura fixa do “bloco” de chips) */
+.card-chips{
+  min-height: 34px;           /* garante espaço igual mesmo com 1 ou 2 chips */
+  display:flex; gap:.35rem; flex-wrap:wrap; align-items:center;
+}
 .badge{display:inline-flex;gap:.4rem;align-items:center;
   font-size:.74rem;padding:.18rem .55rem;border-radius:999px;
-  border:1px solid currentColor;margin-right:.35rem;white-space:nowrap}
+  border:1px solid currentColor;white-space:nowrap}
 .badge.aprendiz{color:#2563EB;background:rgba(37,99,235,.10)}
 .badge.companheiro{color:#7C3AED;background:rgba(124,58,237,.10)}
 .badge.mestre{color:#B91C1C;background:rgba(185,28,28,.10)}
@@ -66,7 +81,7 @@ st.markdown("""
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
   overflow:hidden; min-height: 2.6em; /* ~2 linhas */
 }
-.card-meta{font-size:.82rem;color:#94A3B8;margin-bottom:.15rem}
+.card-meta{font-size:.82rem;color:#C7CED6;margin-bottom:.15rem; min-height:1.2em;}
 .card-desc{
   font-size:.9rem;line-height:1.35;color:#D1D5DB;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
@@ -78,6 +93,7 @@ st.markdown("""
 .card-actions div[data-testid="baseButton-secondary"] { width: 100% }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 # ==========================
@@ -285,6 +301,10 @@ def do_login_compat():
 with st.sidebar:
     st.header("🔐 Acesso Restrito")
 name, auth_status, username = do_login_compat()
+try:
+    st.sidebar.image(str((ASSETS_DIR/"LOGO.png").resolve()), width=120)
+except Exception:
+    pass
 
 if auth_status is False:
     st.error("Usuário ou senha inválidos.")
@@ -409,15 +429,15 @@ else:
 
                     # Chips (Grau + Gênero)
                     chips = grau_chip(item.get("grau_minimo","")) + f' <span class="badge genero">{item.get("genero","")}</span>'
-                    st.markdown(chips, unsafe_allow_html=True)
+                    st.markdown(f'<div class="card-chips">{chips}</div>', unsafe_allow_html=True)
 
                     # Título + meta + descrição (com clamp)
                     st.markdown(f'<div class="card-title">{item["titulo"]}</div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="card-meta">Autor: {item.get("autor","–")}</div>', unsafe_allow_html=True)
-                    if item.get("descricao"):
-                        desc = str(item["descricao"])
-                        limpo = (desc[:180] + ("..." if len(desc) > 180 else ""))
-                        st.markdown(f'<div class="card-desc">{limpo}</div>', unsafe_allow_html=True)
+                    desc = str(item.get("descricao","")).strip()
+                    limpo = (desc[:180] + ("..." if len(desc) > 180 else "")) if desc else "&nbsp;"
+                    st.markdown(f'<div class="card-desc">{limpo}</div>', unsafe_allow_html=True)
+
 
                     # Ações (botão ocupa largura)
                     arquivo_path = normalize_catalog_path(item.get("arquivo",""))
