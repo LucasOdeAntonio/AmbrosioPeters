@@ -1,19 +1,19 @@
 credentials:
   usernames:
     aprendiz:
-      name: "Irmão Aprendiz"
+      name: "aprendiz"
       email: "aprendiz@example.com"
-      password: "$2b$12$WTszSHEHfRkBUatSblmMzuNaxnNregW3I5r2hKNrTWnlds.sF5lDa"
+      password: "$2b$12$3qTsmpsXqM4bQgCM/CLnhuBBb3yjnGiKrtjcZxALI2HzAHy0w/F.W"
       role: "aprendiz"
     companheiro:
-      name: "Irmão Companheiro"
+      name: "companheiro"
       email: "companheiro@example.com"
-      password: "$2b$12$cuiWwUgn3vL/0.G8CPdo2..I4VjcsOIoU0.JhTOtxsZ9W1DNRkiNi"
+      password: "$2b$12$cVs2tu/iXbUTsEaWljedSebkccgzaASErUs4JQLktErYLndlY1aS6"
       role: "companheiro"
     mestre:
       name: "mestre"
       email: "lucas.epc@gmail.com"
-      password: "harin"
+      password: "$2b$12$eYhWF0jIdf/Xl6tcTjk98ub1XBEE8RZpuXe5dlb.gQjGVCirqSbE."
       role: "mestre"
 
 cookie:
