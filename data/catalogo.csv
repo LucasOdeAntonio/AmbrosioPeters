@@ -1,0 +1,23 @@
+id,titulo,autor,genero,descricao,grau_minimo,arquivo,capa
+1,Explorando o Ritual,Autor Desconhecido,Ritualística,Panorama Sobre o Ritual,Aprendiz,conteudo/aprendiz/A01_Explorando_o_Ritual.pdf,assets/A01_Explorando_o_Ritual.png
+2,Diário de um Construtor do Templo,Z. Rodrix,História,Johaben: Diário de um Construtor do Templo,Mestre,conteudo/mestre/M01_DIário_de_um_Construtor_do_Templo.pdf,assets/M01_Diário_de_um_Construtor_do_Templo.png
+3,Reconstruindo o Templo,Z. Rodrix,História,Zorobabel: Reconstruindo o Templo,Mestre,conteudo/mestre/M02_Reconstruindo_o_Templo.pdf,assets/M02_Reconstruindo_o_Templo.png
+4,História e Mistério dos Templários,Pedro Silva,História,História e Mistérios dos Templários,Aprendiz,conteudo/aprendiz/A02_Historia_e_Misterios_dos_Templarios.pdf,assets/A02_Historia_e_Misterios_dos_Templarios.png
+5,A Liderança e o Venerável,Ir.’. Anatoli Oliynik ,Trabalho,A Liderança e o Venerável,Companheiro,conteudo/companheiro/C01_A_Liderança_e_o_Venerável.pdf,
+6,13 de Maio: A Maçonaria e a Abolição da Escravatura,Autor Desconhecido,Trabalho,A Maçonaria e a Abolição da Escravatura,Aprendiz,conteudo/aprendiz/A03_A Maçonaria e a Abolição da Escravatura - Carlos Nobre.pdf,
+7,O Aprendiz - Maçom,Henrique Valadares,Ritualística,1904 - O Aprendiz Maçom,Aprendiz,conteudo/aprendiz/A04_O Aprendiz Maçom.pdf,assets/A04_O Aprendiz Maçom.png
+9,A Ordem dos Templários,Vanildo de Senna,História,A Ordem dos Templários,Aprendiz,conteudo/aprendiz/A05_A Ordem dos Templários.pdf,assets/A05_A Ordem dos Templários.png
+10,A Maçonaria Operativa,Nicola Aslan,História,A Maçonaria Operativa,Companheiro,conteudo/companheiro/C02_A Maçonaria Operativa.pdf,assets/C02_A Maçonaria Operativa.png
+11,Abreviações Maçonicas,Jose Castellani,Ritualística,Dicionário de Termos Maçônicos - José Castellani,Aprendiz,conteudo/aprendiz/A06_Abreviações Maçonicas.pdf,assets/A06_Abreviações Maçonicas.png
+12,A Evolução Física das Lojas Maçonicas,Lucas Galdeano,História,A Evolução Física das Lojas Maçonicas,Companheiro,conteudo/companheiro/C03_A evolução física das Lojas Maçônicas ao longo da História.pdf,assets/C03_A evolução física das Lojas Maçônicas ao longo da história.png
+13,A Importância da Filosofia,Ir.’. Jacson Rekowsky,Trabalho,A Importância da Filosofia no 2º Grau,Companheiro,conteudo/companheiro/C04_A Importância da Filosofia.pdf,assets/C04_A Importância da Filosofia.png
+14,Adão foi Maçom?,Ir.’. Carlos Pires,Trabalho,Adão foi Maçom?,Mestre,conteudo/mestre/M03_Adão foi Maçom?.pdf,assets/M03_Adão Maçom.png
+15,A Loja e o Movimento do Sol,Ir.’. Pedro Juk,Trabalho,A Loja e o Movimento do Sol,Aprendiz,conteudo/aprendiz/A07_A Loja e o Movimento do Sol.pdf,assets/A07_Movimento do Sol.png
+16,A Maçonaria na História,Diversos Autores,História,A Maçonaria na História,Mestre,conteudo/mestre/M04_A Maçonaria na História.pdf,assets/M04_Maçonaria na História.png
+17,A Simbologia do Galo,Ir.’. Roberto Lico,Trabalho,A Simbologia do Galo,Aprendiz,conteudo/aprendiz/A08_A Simbologia do Galo.pdf,assets/A08_A Simbologia do Galo.png
+18,O Papel do Aprendiz,Ir.’. Lucas de Antonio,Trabalho,(ERAC) - O Papel do Aprendiz nas Conduções Maçônicas,Aprendiz,conteudo/aprendiz/A09_O Papel do Aprendiz.pdf,assets/Ambrósio Peters.png
+19,De Volta aos Trabalhos,Ir.’. Sebastião Marcondes,Revista,Revista M.:B.:,Aprendiz,conteudo/aprendiz/A10_De Volta aos Trabalhos.pdf,assets/A10_De Volta aos Trabalhos.png
+20,O Fim do Templo,Z. Rodrix,História,Esquin de Floyrac: O Fim do Templo,Mestre,conteudo/mestre/M05_O Fim do Templo.pdf,assets/M05_O Fim do Templo.png
+21,As Religiões e suas Influências,Ir.’. Paulo Jaworski,Trabalho,As Religiões e suas Influências,Companheiro,conteudo/companheiro/C05_A Religiao e suas Influencias.pdf,assets/C05.png
+22,Introdução à Maçonaria,Ir.’. Lucas de Antonio,Trabalho,Introdução à Maçonaria,Aprendiz,conteudo/aprendiz/A11_Introdução à Maçonaria.pdf,assets/A11.png
+23,A Maçonaria e os Mistérios Antigos,Ir.’. Paulo Vidal,Revista,O Prumo: A Maçonaria em Relaç!ao aos Mistérios Antigos,Aprendiz,conteudo/aprendiz/A12_A Maçonaria e os Mistérios Antigos.pdf,assets/A12.png

@@ -1,0 +1,25 @@
+credentials:
+  usernames:
+    aprendiz:
+      name: "Irmão Aprendiz"
+      email: "aprendiz@example.com"
+      password: "$2b$12$WTszSHEHfRkBUatSblmMzuNaxnNregW3I5r2hKNrTWnlds.sF5lDa"
+      role: "aprendiz"
+    companheiro:
+      name: "Irmão Companheiro"
+      email: "companheiro@example.com"
+      password: "$2b$12$cuiWwUgn3vL/0.G8CPdo2..I4VjcsOIoU0.JhTOtxsZ9W1DNRkiNi"
+      role: "companheiro"
+    mestre:
+      name: "Irmão Lucas Antonio"
+      email: "lucas.epc@gmail.com"
+      password: "$2b$12$pujnixjYJI5j0558ynbiiOlrz2WVnlP9HDULRzDEVsZa5MDk9hC9C"
+      role: "mestre"
+
+cookie:
+  name: "loja_york_auth"
+  key: "troque-por-uma-string-aleatoria-bem-grande"
+  expiry_days: 30
+
+preauthorized:
+  emails: []
