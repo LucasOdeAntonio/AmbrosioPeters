@@ -17,7 +17,10 @@ CATALOGO_PATH = BASE_DIR / "data" / "catalogo.csv"
 CONFIG_PATH = BASE_DIR / "auth_config.yaml"
 CONTEUDO_DIR = BASE_DIR / "conteudo"
 ASSETS_DIR = BASE_DIR / "assets"
-CAPA_PADRAO = ASSETS_DIR / "Ambrósio Peters.png"
+CAPA_PADRAO = ASSETS_DIR / "Ambrósio Peters.png"  # capa padrão da Loja
+
+# Se True, ignora qualquer "capa" do CSV e usa SEMPRE a CAPA_PADRAO
+ALWAYS_USE_DEFAULT_COVER = True
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
@@ -67,6 +70,7 @@ def load_catalogo(path: Path) -> pd.DataFrame:
 
     # 2) tenta ler com encodings/separadores comuns (NÃO sobrescreve se falhar)
     tried = []
+    df = None
     for enc in ("utf-8", "utf-8-sig", "latin-1"):
         for sep in (None, ",", ";", "\t"):
             try:
@@ -138,6 +142,7 @@ def ensure_dirs():
         d.mkdir(parents=True, exist_ok=True)
     # (re)cria capa padrão se não existir ou se estiver inválida
     if not CAPA_PADRAO.exists() or not is_valid_image(CAPA_PADRAO):
+        # cria uma imagem neutra para não quebrar; quando você subir a oficial, ela substitui
         fallback = Image.new("RGB", (600, 340), (240, 240, 240))
         fallback.save(CAPA_PADRAO)
 
@@ -148,9 +153,8 @@ def safe_filename(name: str) -> str:
 
 
 # ==========================
-# Autenticação
+# Autenticação (compat múltiplas versões)
 # ==========================
-
 config = load_config(CONFIG_PATH)
 
 # Em algumas versões, o construtor aceita kwargs; em outras é posicional.
@@ -231,11 +235,16 @@ with st.sidebar:
         st.cache_data.clear()
         st.rerun()
 
+ensure_dirs()
 
 # ==========================
 # Carregamento do catálogo
 # ==========================
 df = load_catalogo(CATALOGO_PATH)
+
+# Ignora capas do CSV se a flag estiver ativa (usa sempre a capa padrão)
+if ALWAYS_USE_DEFAULT_COVER and not df.empty:
+    df["capa"] = ""
 
 # Normaliza o grau_minimo e aplica filtro por papel
 if not df.empty:
@@ -297,11 +306,23 @@ else:
             for col, item in zip(cols, row):
                 with col:
                     with st.container(border=True):
-                        # Capa específica ou padrão, com validação
-                        capa_path = Path(str(item.get("capa", ""))).resolve()
-                        if capa_path.is_file() and is_valid_image(capa_path):
+                        # Capa específica ou padrão, com validação forte
+                        capa_raw = "" if ALWAYS_USE_DEFAULT_COVER else str(item.get("capa", "")).strip()
+                        capa_path = Path(capa_raw).resolve() if capa_raw else None
+
+                        def can_show(p: Path) -> bool:
+                            if not p or not p.is_file():
+                                return False
+                            try:
+                                with Image.open(p) as im:
+                                    im.verify()
+                                return True
+                            except Exception:
+                                return False
+
+                        if can_show(capa_path):
                             st.image(str(capa_path), use_container_width=True)
-                        elif is_valid_image(CAPA_PADRAO):
+                        elif can_show(CAPA_PADRAO):
                             st.image(str(CAPA_PADRAO), use_container_width=True)
                         else:
                             st.image(make_fallback_image_bytes(), use_container_width=True)
@@ -359,7 +380,8 @@ if user_role == "mestre":
                     f.write(arquivo.getbuffer())
 
                 capa_destino = ""
-                if capa is not None:
+                if capa is not None and not ALWAYS_USE_DEFAULT_COVER:
+                    # Só salva capa individual se não estivermos forçando a capa padrão
                     capa_nome = safe_filename(capa.name)
                     capa_destino_path = ASSETS_DIR / capa_nome
                     with open(capa_destino_path, "wb") as f:
@@ -388,7 +410,7 @@ if user_role == "mestre":
                     "descricao": descricao,
                     "grau_minimo": grau_minimo,
                     "arquivo": str(destino).replace("\\", "/"),
-                    "capa": capa_destino,
+                    "capa": capa_destino if not ALWAYS_USE_DEFAULT_COVER else "",
                 }
                 df_atual = pd.concat([df_atual, pd.DataFrame([nova_linha])], ignore_index=True)
 
