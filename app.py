@@ -29,7 +29,7 @@ CAPA_CANDIDATAS = [
 ]
 
 # Se True, ignora qualquer "capa" do CSV e usa SEMPRE a capa padrão
-ALWAYS_USE_DEFAULT_COVER = True
+ALWAYS_USE_DEFAULT_COVER = False
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
