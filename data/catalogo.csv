@@ -1,6 +1,6 @@
 id,titulo,autor,genero,descricao,grau_minimo,arquivo,capa
 1,Explorando o Ritual,Autor Desconhecido,Ritualística,Panorama Sobre o Ritual,Aprendiz,conteudo/aprendiz/A01_Explorando_o_Ritual.pdf,assets/A01.png
-2,Diário de um Construtor do Templo,Z. Rodrix,História,Johaben: Diário de um Construtor do Templo,Mestre,conteudo/mestre/M01_DIário_de_um_Construtor_do_Templo.pdf,assets/M01.png
+2,Diário de um Construtor do Templo,Z. Rodrix,História,Johaben: Diário de um Construtor do Templo,Mestre,conteudo/mestre/M01_Diário de um Construtor do Templo.pdf,assets/M01.png
 3,Reconstruindo o Templo,Z. Rodrix,História,Zorobabel: Reconstruindo o Templo,Mestre,conteudo/mestre/M02_Reconstruindo_o_Templo.pdf,assets/M02.png
 4,História e Mistério dos Templários,Pedro Silva,História,História e Mistérios dos Templários,Aprendiz,conteudo/aprendiz/A02_Historia_e_Misterios_dos_Templarios.pdf,assets/A02.png
 5,A Liderança e o Venerável,Ir.’. Anatoli Oliynik ,Trabalho,A Liderança e o Venerável,Companheiro,conteudo/companheiro/C01_A_Liderança_e_o_Venerável.pdf,assets/C01.png
