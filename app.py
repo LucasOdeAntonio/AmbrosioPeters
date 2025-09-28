@@ -337,15 +337,22 @@ else:
 
                         # Download do arquivo
                         arquivo_path = normalize_catalog_path(item.get("arquivo", ""))
+
+                        # use chaves únicas por item
+                        item_id = str(item.get("id", ""))
+                        dl_key  = f"dl_{item_id}"
+                        na_key  = f"na_{item_id}"
+
                         if arquivo_path.name != "__INVALID__" and arquivo_path.is_file():
                             with open(arquivo_path, "rb") as f:
                                 st.download_button(
                                     "📥 Baixar",
                                     data=f.read(),
-                                    file_name=arquivo_path.name
+                                    file_name=arquivo_path.name,
+                                    key=dl_key,  # <-- chave única
                                 )
                         else:
-                            st.button("Arquivo indisponível", disabled=True)
+                            st.button("Arquivo indisponível", disabled=True, key=na_key)    
         st.divider()
 
 # ==========================
