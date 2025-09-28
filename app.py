@@ -150,24 +150,58 @@ def safe_filename(name: str) -> str:
 # ==========================
 # Autenticação
 # ==========================
-config = load_config(CONFIG_PATH)
-authenticator = stauth.Authenticate(
-    credentials=config["credentials"],
-    cookie_name=config["cookie"]["name"],
-    key=config["cookie"]["key"],
-    cookie_expiry_days=config["cookie"]["expiry_days"],
-)
 
-# Sidebar: Login/Logout
+config = load_config(CONFIG_PATH)
+
+# Em algumas versões, o construtor aceita kwargs; em outras é posicional.
+try:
+    authenticator = stauth.Authenticate(
+        credentials=config["credentials"],
+        cookie_name=config["cookie"]["name"],
+        key=config["cookie"]["key"],
+        cookie_expiry_days=config["cookie"]["expiry_days"],
+    )
+except TypeError:
+    authenticator = stauth.Authenticate(
+        config["credentials"],
+        config["cookie"]["name"],
+        config["cookie"]["key"],
+        config["cookie"]["expiry_days"],
+    )
+
+def do_login_compat():
+    """
+    Tenta login nos formatos novos e antigos.
+    Retorna (name, auth_status, username)
+    """
+    # 1) Tentativa: API nova (renderiza e usa session_state)
+    try:
+        ret = authenticator.login(location="sidebar")
+        if isinstance(ret, tuple) and len(ret) == 3:
+            return ret
+        return (
+            st.session_state.get("name"),
+            st.session_state.get("authentication_status"),
+            st.session_state.get("username"),
+        )
+    except TypeError:
+        # 2) Tentativa: API antiga com argumentos posicionais
+        try:
+            return authenticator.login("Entrar", "sidebar")
+        except TypeError:
+            # 3) Último recurso: um argumento só (algumas variantes)
+            ret = authenticator.login("Entrar")
+            if isinstance(ret, tuple) and len(ret) == 3:
+                return ret
+            return (
+                st.session_state.get("name"),
+                st.session_state.get("authentication_status"),
+                st.session_state.get("username"),
+            )
+
 with st.sidebar:
     st.header("🔐 Acesso Restrito")
-    authenticator.login(location="sidebar")  # nas versões novas não retorna tupla
-
-# Pega os valores da sessão
-auth_status = st.session_state.get("authentication_status", None)
-name = st.session_state.get("name")
-username = st.session_state.get("username")
-email = st.session_state.get("email")  # pode não existir; ok se None
+name, auth_status, username = do_login_compat()
 
 if auth_status is False:
     st.error("Usuário ou senha inválidos.")
@@ -177,17 +211,26 @@ elif auth_status is None:
     st.stop()
 
 # Usuário autenticado
+email = st.session_state.get("email")
 user_role = get_user_role(config, username, name=name, email=email)
 
+def do_logout_compat():
+    try:
+        authenticator.logout(location="sidebar")
+    except TypeError:
+        try:
+            authenticator.logout("Sair", "sidebar")
+        except TypeError:
+            authenticator.logout("Sair")
+
 with st.sidebar:
-    authenticator.logout(location="sidebar")
+    do_logout_compat()
     st.success(f"Bem-vindo, {name} — Grau: {user_role.title()}")
-    st.caption(f"📁 Catálogo: {CATALOGO_PATH}")  # ajuda a detectar se está lendo outro arquivo
+    st.caption(f"📁 Catálogo: {CATALOGO_PATH}")
     if st.button("Limpar cache de dados"):
         st.cache_data.clear()
         st.rerun()
 
-ensure_dirs()
 
 # ==========================
 # Carregamento do catálogo
