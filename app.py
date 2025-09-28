@@ -27,31 +27,54 @@ st.set_page_config(page_title=APP_TITLE, page_icon="📚", layout="wide")
 # ---- Estilos leves (cores seguem o tema do config.toml) ----
 st.markdown("""
 <style>
-/* compactar o topo e suavizar painéis */
 .block-container { padding-top: 1.2rem; }
 [data-testid="stHeader"] { background: transparent; }
 
-/* seção */
-.section-title { margin: .25rem 0 0.5rem; }
+/* Card visual */
+.york-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
 
-/* “chips” de grau e gênero */
+/* Imagem com altura fixa = cards alinhados */
+.york-card img{
+  width: 100%;
+  height: 160px;            /* ajuste aqui se quiser maior/menor */
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* Chips de grau/gênero */
 .badge{display:inline-flex;gap:.4rem;align-items:center;
-  font-size:.75rem;padding:.18rem .55rem;border-radius:999px;
-  border:1px solid currentColor;margin-right:.35rem}
+  font-size:.74rem;padding:.18rem .55rem;border-radius:999px;
+  border:1px solid currentColor;margin-right:.35rem;white-space:nowrap}
 .badge.aprendiz{color:#2563EB;background:rgba(37,99,235,.10)}
 .badge.companheiro{color:#7C3AED;background:rgba(124,58,237,.10)}
 .badge.mestre{color:#B91C1C;background:rgba(185,28,28,.10)}
 .badge.genero{color:#9CA3AF;border-color:#9CA3AF;background:transparent}
 
-/* títulos + descrições */
-.card-title{font-weight:700;font-size:1rem;margin:.1rem 0 .25rem}
-.card-meta{font-size:.82rem;color:#94A3B8;margin-bottom:.25rem}
-.card-desc{font-size:.9rem;line-height:1.35;color:#D1D5DB}
+/* Títulos/descrições com altura fixa via clamp */
+.card-title{
+  font-weight:700;font-size:1rem;margin:.1rem 0 .15rem;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden; min-height: 2.6em; /* ~2 linhas */
+}
+.card-meta{font-size:.82rem;color:#94A3B8;margin-bottom:.15rem}
+.card-desc{
+  font-size:.9rem;line-height:1.35;color:#D1D5DB;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
+  overflow:hidden; min-height: 3.8em; /* ~3 linhas */
+}
 
-/* “encaixar” imagens */
-img[data-testid="stImage"]{border-radius:12px}
-
-/* botões alinhados */
+/* botões ocupam a largura e “grudam” no pé do card */
+.card-actions { margin-top:auto; }
 .card-actions div[data-testid="baseButton-secondary"] { width: 100% }
 </style>
 """, unsafe_allow_html=True)
@@ -324,18 +347,8 @@ with c2:
 with c3:
     ordenar_por = st.selectbox("Ordenar por", ["Título (A→Z)", "Autor (A→Z)", "Mais recentes (ID)"], index=0)
 
-c4, c5, c6 = st.columns([1,1,1])
-with c4:
-    somente_meu_grau = st.toggle("Somente meu grau", value=True)
-with c5:
-    so_disponiveis = st.toggle("Só com arquivo", value=False)
-with c6:
-    ncols = st.slider("Densidade (colunas)", min_value=3, max_value=6, value=4)
-
-# Aplica filtros
+# Aplica filtros (o filtro por grau já foi aplicado acima)
 base = df.copy()
-if somente_meu_grau:
-    base = base[base["grau_minimo"].apply(lambda g: allowed_by_role(user_role, str(g)))]
 if termo:
     t = termo.strip().lower()
     base = base[
@@ -348,8 +361,6 @@ if termo:
     ]
 if genero_sel:
     base = base[base["genero"].isin(genero_sel)]
-if so_disponiveis:
-    base = base[base["arquivo"].apply(lambda p: (normalize_catalog_path(p).name != "__INVALID__") and normalize_catalog_path(p).is_file())]
 
 # Ordenação
 if ordenar_por == "Título (A→Z)":
@@ -358,6 +369,10 @@ elif ordenar_por == "Autor (A→Z)":
     base = base.sort_values(by=["autor", "titulo"])
 else:
     base = base.sort_values(by=["id"], ascending=False)
+
+# FIXO: 4 colunas
+ncols = 4
+
 
 
 ## ==========================
@@ -383,39 +398,42 @@ else:
             cols = st.columns(ncols, vertical_alignment="top")
             for col, item in zip(cols, row):
                 with col:
-                    with st.container(border=True):
-                        # Imagem
-                        cover_img = cover_from_csv(item.get("capa"))
-                        try:
-                            st.image(cover_img, use_container_width=True)
-                        except TypeError:
-                            st.image(cover_img, use_column_width=True)
+                    st.markdown('<div class="york-card">', unsafe_allow_html=True)
 
-                        # Chips (Grau + Gênero)
-                        chips = grau_chip(item.get("grau_minimo","")) + f' <span class="badge genero">{item.get("genero","")}</span>'
-                        st.markdown(chips, unsafe_allow_html=True)
+                    # Imagem
+                    cover_img = cover_from_csv(item.get("capa"))
+                    try:
+                        st.image(cover_img, use_container_width=True)
+                    except TypeError:
+                        st.image(cover_img, use_column_width=True)
 
-                        # Título + meta + descrição
-                        st.markdown(f'<div class="card-title">{item["titulo"]}</div>', unsafe_allow_html=True)
-                        st.markdown(f'<div class="card-meta">Autor: {item.get("autor","–")}</div>', unsafe_allow_html=True)
-                        if item.get("descricao"):
-                            desc = str(item["descricao"])
-                            limpo = (desc[:180] + ("..." if len(desc) > 180 else ""))
-                            st.markdown(f'<div class="card-desc">{limpo}</div>', unsafe_allow_html=True)
+                    # Chips (Grau + Gênero)
+                    chips = grau_chip(item.get("grau_minimo","")) + f' <span class="badge genero">{item.get("genero","")}</span>'
+                    st.markdown(chips, unsafe_allow_html=True)
 
-                        # Ações
-                        arquivo_path = normalize_catalog_path(item.get("arquivo",""))
-                        item_id = str(item.get("id",""))
-                        dl_key = f"dl_{item_id}"
-                        na_key = f"na_{item_id}"
-                        with st.container():
-                            st.markdown('<div class="card-actions">', unsafe_allow_html=True)
-                            if arquivo_path.name != "__INVALID__" and arquivo_path.is_file():
-                                with open(arquivo_path, "rb") as f:
-                                    st.download_button("📥 Baixar", data=f.read(), file_name=arquivo_path.name, key=dl_key)
-                            else:
-                                st.button("Arquivo indisponível", disabled=True, key=na_key)
-                            st.markdown('</div>', unsafe_allow_html=True)
+                    # Título + meta + descrição (com clamp)
+                    st.markdown(f'<div class="card-title">{item["titulo"]}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="card-meta">Autor: {item.get("autor","–")}</div>', unsafe_allow_html=True)
+                    if item.get("descricao"):
+                        desc = str(item["descricao"])
+                        limpo = (desc[:180] + ("..." if len(desc) > 180 else ""))
+                        st.markdown(f'<div class="card-desc">{limpo}</div>', unsafe_allow_html=True)
+
+                    # Ações (botão ocupa largura)
+                    arquivo_path = normalize_catalog_path(item.get("arquivo",""))
+                    item_id = str(item.get("id",""))
+                    dl_key = f"dl_{item_id}"
+                    na_key = f"na_{item_id}"
+                    st.markdown('<div class="card-actions">', unsafe_allow_html=True)
+                    if arquivo_path.name != "__INVALID__" and arquivo_path.is_file():
+                        with open(arquivo_path, "rb") as f:
+                            st.download_button("📥 Baixar", data=f.read(), file_name=arquivo_path.name, key=dl_key)
+                    else:
+                        st.button("Arquivo indisponível", disabled=True, key=na_key)
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                    st.markdown('</div>', unsafe_allow_html=True)
+
         st.divider()
 
 
