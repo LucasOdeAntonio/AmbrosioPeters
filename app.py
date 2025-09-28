@@ -17,7 +17,7 @@ CATALOGO_PATH = BASE_DIR / "data" / "catalogo.csv"
 CONFIG_PATH = BASE_DIR / "auth_config.yaml"
 CONTEUDO_DIR = BASE_DIR / "conteudo"
 ASSETS_DIR = BASE_DIR / "assets"
-CAPA_PADRAO = ASSETS_DIR / "capa_padrao.png"
+CAPA_PADRAO = ASSETS_DIR / "Ambrósio Peters.png"
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
