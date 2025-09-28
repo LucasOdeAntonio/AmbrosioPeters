@@ -20,7 +20,7 @@ ASSETS_DIR = BASE_DIR / "assets"
 CAPA_PADRAO = ASSETS_DIR / "Ambrósio Peters.png"  # capa padrão da Loja
 
 # Se True, ignora qualquer "capa" do CSV e usa SEMPRE a CAPA_PADRAO
-ALWAYS_USE_DEFAULT_COVER = True
+ALWAYS_USE_DEFAULT_COVER = False
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
