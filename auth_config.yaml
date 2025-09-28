@@ -11,9 +11,9 @@ credentials:
       password: "$2b$12$cuiWwUgn3vL/0.G8CPdo2..I4VjcsOIoU0.JhTOtxsZ9W1DNRkiNi"
       role: "companheiro"
     mestre:
-      name: "Irmão Lucas Antonio"
+      name: "mestre"
       email: "lucas.epc@gmail.com"
-      password: "$2b$12$pujnixjYJI5j0558ynbiiOlrz2WVnlP9HDULRzDEVsZa5MDk9hC9C"
+      password: "harin"
       role: "mestre"
 
 cookie:
