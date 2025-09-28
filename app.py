@@ -28,68 +28,79 @@ st.set_page_config(page_title=APP_TITLE, page_icon="📚", layout="wide")
 # ---- Estilos leves (cores seguem o tema do config.toml) ----
 st.markdown("""
 <style>
+/* ===================== Loja Clara ===================== */
 :root{
-  --york-bg:#0B1020; --york-bg2:#0F172A; --york-text:#E5E7EB; --york-primary:#B91C1C;
+  --bg:#F7FAFC;            /* fundo principal */
+  --bg2:#FFFFFF;           /* painéis e sidebar */
+  --text:#0F172A;          /* texto */
+  --muted:#64748B;         /* texto secundário */
+  --muted2:#475569;        /* descrições */
+  --primary:#9B1C1C;       /* vermelho de ação */
+  --border:#E5E7EB;        /* bordas suaves */
 }
-/* Fallback caso o theme não aplique (não briga se o theme vier) */
-[data-testid="stAppViewContainer"] { background-color: var(--york-bg); }
-[data-testid="stSidebar"] { background-color: var(--york-bg2); }
+[data-testid="stAppViewContainer"] { background-color: var(--bg); }
+[data-testid="stSidebar"] { background-color: var(--bg2); }
 .block-container { padding-top: 1.2rem; }
-[data-testid="stHeader"] { background: transparent; color: var(--york-text); }
+[data-testid="stHeader"] { background: transparent; color: var(--text); }
 
 /* Card visual */
 .york-card{
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.08);
+  background: var(--bg2);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  box-shadow: 0 6px 18px rgba(2,6,23,.06);
   height: 100%;
   display: flex;
   flex-direction: column;
   gap: .45rem;
-  color: var(--york-text);
+  color: var(--text);
 }
 
 /* Imagem com altura fixa = cards alinhados */
 .york-card img{
   width: 100%;
-  height: 180px;              /* ajuste aqui se quiser maior/menor */
+  height: 180px;           /* ajuste aqui se quiser maior/menor */
   object-fit: cover;
   border-radius: 10px;
 }
 
-/* Chips de grau/gênero (com altura fixa do “bloco” de chips) */
+/* Área de chips com altura fixa */
 .card-chips{
-  min-height: 34px;           /* garante espaço igual mesmo com 1 ou 2 chips */
+  min-height: 34px;        /* garante espaço igual com 1 ou 2 chips */
   display:flex; gap:.35rem; flex-wrap:wrap; align-items:center;
 }
-.badge{display:inline-flex;gap:.4rem;align-items:center;
-  font-size:.74rem;padding:.18rem .55rem;border-radius:999px;
-  border:1px solid currentColor;white-space:nowrap}
-.badge.aprendiz{color:#2563EB;background:rgba(37,99,235,.10)}
-.badge.companheiro{color:#7C3AED;background:rgba(124,58,237,.10)}
-.badge.mestre{color:#B91C1C;background:rgba(185,28,28,.10)}
-.badge.genero{color:#9CA3AF;border-color:#9CA3AF;background:transparent}
 
-/* Títulos/descrições com altura fixa via clamp */
+/* Chips de grau/gênero */
+.badge{
+  display:inline-flex;gap:.4rem;align-items:center;
+  font-size:.74rem;padding:.18rem .55rem;border-radius:999px;
+  border:1px solid currentColor;white-space:nowrap
+}
+.badge.aprendiz{color:#2563EB;background:rgba(37,99,235,.10)}
+.badge.companheiro{color:#7C3AED;background:rgba(124,58,237,.12)}
+.badge.mestre{color:var(--primary);background:rgba(155,28,28,.10)}
+.badge.genero{color:#334155;border-color:#CBD5E1;background:#F8FAFC}
+
+/* Títulos e textos com alturas fixas (clamp) */
 .card-title{
   font-weight:700;font-size:1rem;margin:.1rem 0 .15rem;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
   overflow:hidden; min-height: 2.6em; /* ~2 linhas */
 }
-.card-meta{font-size:.82rem;color:#C7CED6;margin-bottom:.15rem; min-height:1.2em;}
+.card-meta{font-size:.82rem;color:var(--muted);margin-bottom:.15rem; min-height:1.2em;}
 .card-desc{
-  font-size:.9rem;line-height:1.35;color:#D1D5DB;
+  font-size:.9rem;line-height:1.35;color:var(--muted2);
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
   overflow:hidden; min-height: 3.8em; /* ~3 linhas */
 }
 
-/* botões ocupam a largura e “grudam” no pé do card */
+/* Botões ocupam a largura e grudam no pé do card */
 .card-actions { margin-top:auto; }
 .card-actions div[data-testid="baseButton-secondary"] { width: 100% }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 
