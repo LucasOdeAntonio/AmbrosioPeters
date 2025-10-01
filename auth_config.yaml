@@ -18,6 +18,12 @@ credentials:
       password: "comp@2025"
       role: "companheiro"
 
+      Lucas Antonio :
+      name: "Lucas Antonio"
+      email: "mestre1@example.com"
+      password: "admin"
+      role: "mestre"
+
     mestre1:
       name: "mestre1"
       email: "mestre1@example.com"
