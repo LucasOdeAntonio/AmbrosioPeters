@@ -19,15 +19,15 @@ credentials:
       role: "companheiro"
 
     mestre1:
-      name: "mestre"
-      email: "mestre@example.com"
+      name: "mestre1"
+      email: "mestre1@example.com"
       password: "senhamestre123"
       role: "mestre"
 
-      mestre2:
-      name: "mestre"
-      email: "mestre@example.com"
-      password: "senhamestre123"
+    mestre2:
+      name: "mestre2"
+      email: "mestre2@example.com"
+      password: "senhamestre456"
       role: "mestre"
 
 cookie:
