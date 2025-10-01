@@ -269,30 +269,37 @@ config = load_config(CONFIG_PATH)
 
 def check_plain_login(config: dict, role_key: str, username_in: str, password_in: str):
     """
-    Valida usuário/senha em TEXTO PLANO para um papel específico (aprendiz/companheiro/mestre).
-    - role_key define qual registro do YAML será usado.
-    - username_in deve bater com a chave do YAML (ex.: 'aprendiz') OU com o campo 'name'.
-    - password_in é comparada em texto plano com o campo 'password'.
-    Retorna (ok, user_dict) onde user_dict inclui name/email/role/username.
+    Valida um login em TEXTO PLANO, considerando múltiplos usuários por papel (role).
+    - role_key: 'aprendiz' | 'companheiro' | 'mestre'
+    - username_in: o username digitado (chave do YAML) ou o 'name'
+    - password_in: senha em texto plano
+    Retorna (ok, user_dict)
     """
     try:
-        users = config["credentials"]["usernames"]
-        ud = users.get(role_key, {})
+        users: dict = config["credentials"]["usernames"]
     except Exception:
         return False, {}
 
-    # Aceita username igual à CHAVE do YAML OU igual ao campo "name"
-    usernames_ok = {role_key, str(ud.get("name", "")).strip()}
-    username_match = str(username_in).strip() in usernames_ok
-    password_match = str(password_in) == str(ud.get("password", ""))
+    ukey = str(username_in or "").strip()
+    if not ukey:
+        return False, {}
 
-    if username_match and password_match:
-        return True, {
-            "username": role_key,
-            "name": ud.get("name", role_key),
-            "email": ud.get("email", ""),
-            "role": str(ud.get("role", role_key)).lower(),
-        }
+    def _match_user(k: str, ud: dict) -> bool:
+        # aceita login por 'username' (chave do YAML) ou por 'name'
+        return ukey == k or ukey == str(ud.get("name", "")).strip()
+
+    # Varre apenas usuários do mesmo role
+    for k, ud in users.items():
+        if str(ud.get("role", "")).lower() != role_key.lower():
+            continue
+        if _match_user(k, ud) and str(password_in) == str(ud.get("password", "")):
+            return True, {
+                "username": k,
+                "name": ud.get("name", k),
+                "email": ud.get("email", ""),
+                "role": str(ud.get("role", role_key)).lower(),
+            }
+
     return False, {}
 
 def logout():

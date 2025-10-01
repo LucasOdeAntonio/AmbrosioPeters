@@ -1,19 +1,33 @@
 credentials:
   usernames:
     aprendiz:
-      name: "aprendiz"
-      email: "aprendiz@example.com"
-      password: "boaz"        # TEXTO PLANO
+      name: "aprendiz1"
+      email: "aprendiz1@example.com"
+      password: "boaz"
       role: "aprendiz"
+
+    aprendiz:
+      name: "aprendiz2"
+      email: "aprendiz2@example.com"
+      password: "segredo2"
+      role: "aprendiz"
+
     companheiro:
-      name: "companheiro"
-      email: "companheiro@example.com"
-      password: "senhacompanheiro"     # TEXTO PLANO
+      name: "companheiro1"
+      email: "companheiro1@example.com"
+      password: "comp@2025"
       role: "companheiro"
+
     mestre:
       name: "mestre"
       email: "mestre@example.com"
-      password: "senhamestre123"          # TEXTO PLANO
+      password: "senhamestre123"
+      role: "mestre"
+
+      mestre:
+      name: "mestre"
+      email: "mestre@example.com"
+      password: "senhamestre123"
       role: "mestre"
 
 cookie:
