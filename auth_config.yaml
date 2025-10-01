@@ -1,30 +1,30 @@
 credentials:
   usernames:
-    aprendiz:
+    aprendiz1:
       name: "aprendiz1"
       email: "aprendiz1@example.com"
       password: "boaz"
       role: "aprendiz"
 
-    aprendiz:
+    aprendiz2:
       name: "aprendiz2"
       email: "aprendiz2@example.com"
       password: "segredo2"
       role: "aprendiz"
 
-    companheiro:
+    companheiro1:
       name: "companheiro1"
       email: "companheiro1@example.com"
       password: "comp@2025"
       role: "companheiro"
 
-    mestre:
+    mestre1:
       name: "mestre"
       email: "mestre@example.com"
       password: "senhamestre123"
       role: "mestre"
 
-      mestre:
+      mestre2:
       name: "mestre"
       email: "mestre@example.com"
       password: "senhamestre123"
