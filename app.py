@@ -7,6 +7,7 @@ import yaml
 from yaml.loader import SafeLoader
 from PIL import Image
 from io import BytesIO
+import hashlib  # <- para cache-buster do YAML
 
 # ==========================
 # Configurações básicas
@@ -17,7 +18,6 @@ CATALOGO_PATH = BASE_DIR / "data" / "catalogo.csv"
 CONFIG_PATH = BASE_DIR / "auth_config.yaml"
 CONTEUDO_DIR = BASE_DIR / "conteudo"
 ASSETS_DIR = BASE_DIR / "assets"
-
 
 ROLE_LEVEL = {"aprendiz": 1, "companheiro": 2, "mestre": 3}
 GRAU_LEVEL = {"Aprendiz": 1, "Companheiro": 2, "Mestre": 3}
@@ -100,8 +100,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-
+# ==========================
+# Utilitário: assinatura do YAML (cache-buster)
+# ==========================
+def _file_sig(path: Path) -> str:
+    try:
+        stt = path.stat()
+        raw = f"{path}|{stt.st_mtime_ns}|{stt.st_size}"
+        return hashlib.md5(raw.encode()).hexdigest()
+    except Exception:
+        return "MISSING"
 
 # ==========================
 # Utilitários de imagem (PIL)
@@ -221,13 +229,14 @@ def load_catalogo(path: Path) -> pd.DataFrame:
     df = df[REQUIRED_COLS]
     return df
 
-@st.cache_data
-def load_config(path: Path) -> dict:
+@st.cache_data(show_spinner=False)
+def load_config(path: Path, sig: str) -> dict:
+    """Carrega e cacheia o YAML; o cache é invalidado quando o arquivo muda."""
     if not path.exists():
         st.error("Arquivo 'auth_config.yaml' não encontrado.")
         st.stop()
     with open(path, "r", encoding="utf-8") as f:
-        return yaml.load(f, Loader=SafeLoader)
+        return yaml.load(f, Loader=SafeLoader) or {}
 
 def get_user_role(config: dict, username: str, name: str | None = None, email: str | None = None) -> str:
     try:
@@ -263,41 +272,50 @@ def safe_filename(name: str) -> str:
     return "".join(keep)
 
 # ==========================
-# Autenticação (compat múltiplas versões)
+# Autenticação (múltiplos usuários por grau, texto plano)
 # ==========================
-config = load_config(CONFIG_PATH)
+config = load_config(CONFIG_PATH, _file_sig(CONFIG_PATH))
 
 def check_plain_login(config: dict, role_key: str, username_in: str, password_in: str):
     """
-    Valida um login em TEXTO PLANO, considerando múltiplos usuários por papel (role).
+    Login em texto plano com múltiplos usuários por papel (role).
     - role_key: 'aprendiz' | 'companheiro' | 'mestre'
-    - username_in: o username digitado (chave do YAML) ou o 'name'
-    - password_in: senha em texto plano
+    - username_in: aceita a CHAVE do YAML ou o 'name' (case-insensitive)
+    - password_in: senha (case-sensitive); removemos espaços nas pontas do input
     Retorna (ok, user_dict)
     """
     try:
         users: dict = config["credentials"]["usernames"]
+        if not isinstance(users, dict):
+            return False, {}
     except Exception:
         return False, {}
 
-    ukey = str(username_in or "").strip()
-    if not ukey:
+    ukey = (username_in or "").strip()
+    pw   = (password_in or "").strip()  # remove espaços acidentais
+    if not ukey or not pw:
         return False, {}
 
-    def _match_user(k: str, ud: dict) -> bool:
-        # aceita login por 'username' (chave do YAML) ou por 'name'
-        return ukey == k or ukey == str(ud.get("name", "")).strip()
+    ukey_low = ukey.lower()
+    role_low = (role_key or "").lower()
 
-    # Varre apenas usuários do mesmo role
-    for k, ud in users.items():
-        if str(ud.get("role", "")).lower() != role_key.lower():
+    for key, ud in users.items():
+        if not isinstance(ud, dict):
             continue
-        if _match_user(k, ud) and str(password_in) == str(ud.get("password", "")):
+        # confere o papel
+        if str(ud.get("role", "")).lower() != role_low:
+            continue
+        # match por 'username' (chave) OU por 'name' (ambos case-insensitive)
+        name_low = str(ud.get("name", "")).strip().lower()
+        if not (ukey_low == key.lower() or ukey_low == name_low):
+            continue
+        # senha é case-sensitive (comparamos exatamente)
+        if pw == str(ud.get("password", "")):
             return True, {
-                "username": k,
-                "name": ud.get("name", k),
+                "username": key,
+                "name": ud.get("name", key),
                 "email": ud.get("email", ""),
-                "role": str(ud.get("role", role_key)).lower(),
+                "role": role_low,
             }
 
     return False, {}
@@ -311,6 +329,21 @@ def logout():
 with st.sidebar:
     st.header("Para uso dos membros da A.R.L.S Ambrósio Peters nº 4101")
     st.caption("Use os acessos por grau. Caso tenha dúvidas, consulte o Venerável da Loja.")
+
+    # Diagnóstico rápido (quem o app carregou)
+    with st.expander("🔎 Diagnóstico (usuários carregados)", expanded=False):
+        try:
+            users = config.get("credentials", {}).get("usernames", {})
+            by_role = {"aprendiz": [], "companheiro": [], "mestre": []}
+            for k, ud in users.items():
+                r = str(ud.get("role","")).lower()
+                if r in by_role:
+                    by_role[r].append(k)
+            st.write("**Aprendizes**:", ", ".join(by_role["aprendiz"]) or "—")
+            st.write("**Companheiros**:", ", ".join(by_role["companheiro"]) or "—")
+            st.write("**Mestres**:", ", ".join(by_role["mestre"]) or "—")
+        except Exception as e:
+            st.write("Erro lendo YAML:", e)
 
     # Mostra o logo (opcional)
     try:
@@ -335,7 +368,7 @@ with st.sidebar:
 
         with tabs[0]:
             with st.form("login_aprendiz"):
-                u1 = st.text_input("Usuário (ex.: aprendiz)", key="u_aprendiz")
+                u1 = st.text_input("Usuário (ex.: aprendiz1)", key="u_aprendiz")
                 p1 = st.text_input("Senha (Aprendiz)", type="password", key="p_aprendiz")
                 s1 = st.form_submit_button("Entrar como Aprendiz")
             if s1:
@@ -352,7 +385,7 @@ with st.sidebar:
 
         with tabs[1]:
             with st.form("login_companheiro"):
-                u2 = st.text_input("Usuário (ex.: companheiro)", key="u_companheiro")
+                u2 = st.text_input("Usuário (ex.: companheiro1)", key="u_companheiro")
                 p2 = st.text_input("Senha (Companheiro)", type="password", key="p_companheiro")
                 s2 = st.form_submit_button("Entrar como Companheiro")
             if s2:
@@ -369,7 +402,7 @@ with st.sidebar:
 
         with tabs[2]:
             with st.form("login_mestre"):
-                u3 = st.text_input("Usuário (ex.: mestre)", key="u_mestre")
+                u3 = st.text_input("Usuário (ex.: mestre1)", key="u_mestre")
                 p3 = st.text_input("Senha (Mestre)", type="password", key="p_mestre")
                 s3 = st.form_submit_button("Entrar como Mestre")
             if s3:
@@ -455,8 +488,6 @@ else:
 # FIXO: 4 colunas
 ncols = 4
 
-
-
 ## ==========================
 # Renderização dos cards
 # ==========================
@@ -500,7 +531,6 @@ else:
                     limpo = (desc[:180] + ("..." if len(desc) > 180 else "")) if desc else "&nbsp;"
                     st.markdown(f'<div class="card-desc">{limpo}</div>', unsafe_allow_html=True)
 
-
                     # Ações (botão ocupa largura)
                     arquivo_path = normalize_catalog_path(item.get("arquivo",""))
                     item_id = str(item.get("id",""))
@@ -517,7 +547,6 @@ else:
                     st.markdown('</div>', unsafe_allow_html=True)
 
         st.divider()
-
 
 # ==========================
 # Área de gestão (somente Mestres)
