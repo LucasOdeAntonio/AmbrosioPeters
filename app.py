@@ -353,7 +353,7 @@ with st.sidebar:
 
         with tabs[0]:
             with st.form("login_aprendiz"):
-                u1 = st.text_input("Usuário (ex.: aprendiz1)", key="u_aprendiz")
+                u1 = st.text_input("Usuário Aprendiz", key="u_aprendiz")
                 p1 = st.text_input("Senha (Aprendiz)", type="password", key="p_aprendiz")
                 s1 = st.form_submit_button("Entrar como Aprendiz")
             if s1:
@@ -370,7 +370,7 @@ with st.sidebar:
 
         with tabs[1]:
             with st.form("login_companheiro"):
-                u2 = st.text_input("Usuário (ex.: companheiro1)", key="u_companheiro")
+                u2 = st.text_input("Usuário Companheiro", key="u_companheiro")
                 p2 = st.text_input("Senha (Companheiro)", type="password", key="p_companheiro")
                 s2 = st.form_submit_button("Entrar como Companheiro")
             if s2:
@@ -387,7 +387,7 @@ with st.sidebar:
 
         with tabs[2]:
             with st.form("login_mestre"):
-                u3 = st.text_input("Usuário (ex.: mestre1)", key="u_mestre")
+                u3 = st.text_input("Usuário Mestre", key="u_mestre")
                 p3 = st.text_input("Senha (Mestre)", type="password", key="p_mestre")
                 s3 = st.form_submit_button("Entrar como Mestre")
             if s3:

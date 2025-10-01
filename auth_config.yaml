@@ -1,39 +1,117 @@
 credentials:
   usernames:
-    aprendiz1:
-      name: "aprendiz1"
+    aprendiz:
+      name: "aprendiz"
       email: "aprendiz1@example.com"
       password: "boaz"
       role: "aprendiz"
 
-    aprendiz2:
-      name: "aprendiz2"
-      email: "aprendiz2@example.com"
-      password: "segredo2"
-      role: "aprendiz"
-
-    companheiro1:
-      name: "companheiro1"
+    Paulo Jaworski:
+      name: "Paulo Jaworski"
       email: "companheiro1@example.com"
-      password: "comp@2025"
+      password: "teste123"
       role: "companheiro"
 
-      Lucas Antonio :
+    William Garcia:
+      name: "William Garcia"
+      email: "companheiro1@example.com"
+      password: "teste456"
+      role: "companheiro"
+
+    Jorge Majeski:
+      name: "Jorge Majeski"
+      email: "companheiro1@example.com"
+      password: "teste789"
+      role: "companheiro"
+
+    Dinael Almeida:
+      name: "Dinael Almeira"
+      email: "companheiro1@example.com"
+      password: "teste123"
+      role: "companheiro"
+
+    Roberto Carlos:
+      name: "Roberto Carlos"
+      email: "companheiro1@example.com"
+      password: "teste456"
+      role: "companheiro"
+
+    Lucas Antonio :
       name: "Lucas Antonio"
       email: "mestre1@example.com"
       password: "admin"
       role: "mestre"
 
-    mestre1:
-      name: "mestre1"
+    Tonico:
+      name: "Tonico"
       email: "mestre1@example.com"
-      password: "senhamestre123"
+      password: "mestre123"
       role: "mestre"
 
-    mestre2:
-      name: "mestre2"
+    Carlinhos:
+      name: "Carlinhos"
       email: "mestre2@example.com"
-      password: "senhamestre456"
+      password: "mestre456"
+      role: "mestre"
+
+    Vargas:
+      name: "Vargas"
+      email: "mestre2@example.com"
+      password: "mestre789"
+      role: "mestre"
+
+    Clarisvaldo:
+      name: "Clarisvaldo"
+      email: "mestre2@example.com"
+      password: "mestre123"
+      role: "mestre"
+
+    Ernani:
+      name: "Ernani"
+      email: "mestre2@example.com"
+      password: "mestre456"
+      role: "mestre"
+
+    Pimpao:
+      name: "Pimpao"
+      email: "mestre2@example.com"
+      password: "mestre789"
+      role: "mestre"
+
+    Idieu:
+      name: "Idineu"
+      email: "mestre2@example.com"
+      password: "mestre123"
+      role: "mestre"
+
+    Marconi:
+      name: "Marconi"
+      email: "mestre2@example.com"
+      password: "mestre456"
+      role: "mestre"
+
+    Marconi Jr:
+      name: "Marconi Jr"
+      email: "mestre2@example.com"
+      password: "mestre789
+      role: "mestre"
+
+    Nelson:
+      name: "Nelson"
+      email: "mestre2@example.com"
+      password: "mestre123"
+      role: "mestre"
+
+    Petrini:
+      name: "Petrini"
+      email: "mestre2@example.com"
+      password: "mestre456"
+      role: "mestre"
+
+    Wanderson:
+      name: "Wanderson"
+      email: "mestre2@example.com"
+      password: "mestre789"
       role: "mestre"
 
 cookie:
