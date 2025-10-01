@@ -12,7 +12,7 @@ from io import BytesIO
 # Configurações básicas
 # ==========================
 BASE_DIR = Path(__file__).resolve().parent
-APP_TITLE = "Repositório – Rito de York"
+APP_TITLE = "Repositório de Conteúdos - A.R.L.S Ambrósio Peters nº 4101"
 CATALOGO_PATH = BASE_DIR / "data" / "catalogo.csv"
 CONFIG_PATH = BASE_DIR / "auth_config.yaml"
 CONTEUDO_DIR = BASE_DIR / "conteudo"
@@ -314,7 +314,6 @@ with st.sidebar:
     # Se já autenticado, mostra status e botão sair
     if st.session_state.get("auth_status", False):
         st.success(f"Bem-vindo, {st.session_state.get('name')} — Grau: {st.session_state.get('user_role','').title()}")
-        st.caption(f"📁 Catálogo: {CATALOGO_PATH}")
         colA, colB = st.columns(2)
         with colA:
             if st.button("Sair"):
@@ -412,7 +411,7 @@ if not df.empty:
 # Barra superior / filtros
 # ==========================
 st.title(APP_TITLE)
-st.caption("Conteúdos exclusivamente ligados ao Rito de York, com respeito aos princípios maçônicos e segregação por grau.")
+st.caption("Conteúdos ligados ao Rito de York, com respeito aos princípios maçônicos e segregação por grau.")
 
 c1, c2, c3 = st.columns([2,1,1])
 with c1:
