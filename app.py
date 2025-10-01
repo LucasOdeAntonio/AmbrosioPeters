@@ -330,21 +330,6 @@ with st.sidebar:
     st.header("Para uso dos membros da A.R.L.S Ambrósio Peters nº 4101")
     st.caption("Use os acessos por grau. Caso tenha dúvidas, consulte o Venerável da Loja.")
 
-    # Diagnóstico rápido (quem o app carregou)
-    with st.expander("🔎 Diagnóstico (usuários carregados)", expanded=False):
-        try:
-            users = config.get("credentials", {}).get("usernames", {})
-            by_role = {"aprendiz": [], "companheiro": [], "mestre": []}
-            for k, ud in users.items():
-                r = str(ud.get("role","")).lower()
-                if r in by_role:
-                    by_role[r].append(k)
-            st.write("**Aprendizes**:", ", ".join(by_role["aprendiz"]) or "—")
-            st.write("**Companheiros**:", ", ".join(by_role["companheiro"]) or "—")
-            st.write("**Mestres**:", ", ".join(by_role["mestre"]) or "—")
-        except Exception as e:
-            st.write("Erro lendo YAML:", e)
-
     # Mostra o logo (opcional)
     try:
         st.image(str((ASSETS_DIR/"LOGO.png").resolve()), width=200)
