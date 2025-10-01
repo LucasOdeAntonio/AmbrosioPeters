@@ -3,17 +3,17 @@ credentials:
     aprendiz:
       name: "aprendiz"
       email: "aprendiz@example.com"
-      password: "$2b$12$WoJLnV7.JbmH3oz9xm8fwO5gdcBy/BPfnhFVli450zE/QFLW3UI7G"
+      password: "boaz"        # TEXTO PLANO
       role: "aprendiz"
     companheiro:
       name: "companheiro"
       email: "companheiro@example.com"
-      password: "$2b$12$EwVZC03c/Dox0yh3aSDRWeu8Q1pd0l5zv4k6Au/ElRZIxews4bs/m"
+      password: "senhacompanheiro"     # TEXTO PLANO
       role: "companheiro"
     mestre:
       name: "mestre"
-      email: "lucas.epc@gmail.com"
-      password: "$2b$12$g1SZcYdHv3CqM1Uqajd0K.oczfypYIWtbjDqe.bie8jAD4OaGhBMe"
+      email: "mestre@example.com"
+      password: "senhamestre123"          # TEXTO PLANO
       role: "mestre"
 
 cookie:

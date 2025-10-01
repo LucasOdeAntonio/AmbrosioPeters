@@ -5,7 +5,6 @@ import pandas as pd
 import streamlit as st
 import yaml
 from yaml.loader import SafeLoader
-import streamlit_authenticator as stauth
 from PIL import Image
 from io import BytesIO
 
@@ -268,78 +267,127 @@ def safe_filename(name: str) -> str:
 # ==========================
 config = load_config(CONFIG_PATH)
 
-try:
-    authenticator = stauth.Authenticate(
-        credentials=config["credentials"],
-        cookie_name=config["cookie"]["name"],
-        key=config["cookie"]["key"],
-        cookie_expiry_days=config["cookie"]["expiry_days"],
-    )
-except TypeError:
-    authenticator = stauth.Authenticate(
-        config["credentials"],
-        config["cookie"]["name"],
-        config["cookie"]["key"],
-        config["cookie"]["expiry_days"],
-    )
-
-def do_login_compat():
+def check_plain_login(config: dict, role_key: str, username_in: str, password_in: str):
+    """
+    Valida usuário/senha em TEXTO PLANO para um papel específico (aprendiz/companheiro/mestre).
+    - role_key define qual registro do YAML será usado.
+    - username_in deve bater com a chave do YAML (ex.: 'aprendiz') OU com o campo 'name'.
+    - password_in é comparada em texto plano com o campo 'password'.
+    Retorna (ok, user_dict) onde user_dict inclui name/email/role/username.
+    """
     try:
-        ret = authenticator.login(location="sidebar")
-        if isinstance(ret, tuple) and len(ret) == 3:
-            return ret
-        return (
-            st.session_state.get("name"),
-            st.session_state.get("authentication_status"),
-            st.session_state.get("username"),
-        )
-    except TypeError:
-        try:
-            return authenticator.login("Entrar", "sidebar")
-        except TypeError:
-            ret = authenticator.login("Entrar")
-            if isinstance(ret, tuple) and len(ret) == 3:
-                return ret
-            return (
-                st.session_state.get("name"),
-                st.session_state.get("authentication_status"),
-                st.session_state.get("username"),
-            )
+        users = config["credentials"]["usernames"]
+        ud = users.get(role_key, {})
+    except Exception:
+        return False, {}
+
+    # Aceita username igual à CHAVE do YAML OU igual ao campo "name"
+    usernames_ok = {role_key, str(ud.get("name", "")).strip()}
+    username_match = str(username_in).strip() in usernames_ok
+    password_match = str(password_in) == str(ud.get("password", ""))
+
+    if username_match and password_match:
+        return True, {
+            "username": role_key,
+            "name": ud.get("name", role_key),
+            "email": ud.get("email", ""),
+            "role": str(ud.get("role", role_key)).lower(),
+        }
+    return False, {}
+
+def logout():
+    for k in ("auth_status", "username", "name", "email", "user_role"):
+        st.session_state.pop(k, None)
+    st.success("Sessão encerrada.")
+    st.rerun()
 
 with st.sidebar:
-    st.header("🔐 Acesso Restrito")
-name, auth_status, username = do_login_compat()
-try:
-    st.sidebar.image(str((ASSETS_DIR/"LOGO.png").resolve()), width=120)
-except Exception:
-    pass
+    st.header("🔐 Acesso Restrito (sem criptografia)")
+    st.caption("Use os acessos por grau. As senhas são comparadas em texto plano conforme o arquivo YAML.")
 
-if auth_status is False:
-    st.error("Usuário ou senha inválidos.")
-    st.stop()
-elif auth_status is None:
+    # Mostra o logo (opcional)
+    try:
+        st.image(str((ASSETS_DIR/"LOGO.png").resolve()), width=120)
+    except Exception:
+        pass
+
+    # Se já autenticado, mostra status e botão sair
+    if st.session_state.get("auth_status", False):
+        st.success(f"Bem-vindo, {st.session_state.get('name')} — Grau: {st.session_state.get('user_role','').title()}")
+        st.caption(f"📁 Catálogo: {CATALOGO_PATH}")
+        colA, colB = st.columns(2)
+        with colA:
+            if st.button("Sair"):
+                logout()
+        with colB:
+            if st.button("Limpar cache de dados"):
+                st.cache_data.clear()
+                st.rerun()
+    else:
+        # 3 formulários — um por grau
+        tabs = st.tabs(["Aprendiz", "Companheiro", "Mestre"])
+
+        with tabs[0]:
+            with st.form("login_aprendiz"):
+                u1 = st.text_input("Usuário (ex.: aprendiz)", key="u_aprendiz")
+                p1 = st.text_input("Senha (Aprendiz)", type="password", key="p_aprendiz")
+                s1 = st.form_submit_button("Entrar como Aprendiz")
+            if s1:
+                ok, data = check_plain_login(config, "aprendiz", u1, p1)
+                if ok:
+                    st.session_state["auth_status"] = True
+                    st.session_state["username"] = data["username"]
+                    st.session_state["name"] = data["name"]
+                    st.session_state["email"] = data["email"]
+                    st.session_state["user_role"] = data["role"]
+                    st.rerun()
+                else:
+                    st.error("Credenciais inválidas para Aprendiz.")
+
+        with tabs[1]:
+            with st.form("login_companheiro"):
+                u2 = st.text_input("Usuário (ex.: companheiro)", key="u_companheiro")
+                p2 = st.text_input("Senha (Companheiro)", type="password", key="p_companheiro")
+                s2 = st.form_submit_button("Entrar como Companheiro")
+            if s2:
+                ok, data = check_plain_login(config, "companheiro", u2, p2)
+                if ok:
+                    st.session_state["auth_status"] = True
+                    st.session_state["username"] = data["username"]
+                    st.session_state["name"] = data["name"]
+                    st.session_state["email"] = data["email"]
+                    st.session_state["user_role"] = data["role"]
+                    st.rerun()
+                else:
+                    st.error("Credenciais inválidas para Companheiro.")
+
+        with tabs[2]:
+            with st.form("login_mestre"):
+                u3 = st.text_input("Usuário (ex.: mestre)", key="u_mestre")
+                p3 = st.text_input("Senha (Mestre)", type="password", key="p_mestre")
+                s3 = st.form_submit_button("Entrar como Mestre")
+            if s3:
+                ok, data = check_plain_login(config, "mestre", u3, p3)
+                if ok:
+                    st.session_state["auth_status"] = True
+                    st.session_state["username"] = data["username"]
+                    st.session_state["name"] = data["name"]
+                    st.session_state["email"] = data["email"]
+                    st.session_state["user_role"] = data["role"]
+                    st.rerun()
+                else:
+                    st.error("Credenciais inválidas para Mestre.")
+
+# Gate de acesso
+if not st.session_state.get("auth_status", False):
     st.info("Informe usuário e senha para acessar o repositório.")
     st.stop()
 
+# Dados do usuário já autenticado
+name = st.session_state.get("name")
+username = st.session_state.get("username")
 email = st.session_state.get("email")
-user_role = get_user_role(config, username, name=name, email=email)
-
-def do_logout_compat():
-    try:
-        authenticator.logout(location="sidebar")
-    except TypeError:
-        try:
-            authenticator.logout("Sair", "sidebar")
-        except TypeError:
-            authenticator.logout("Sair")
-
-with st.sidebar:
-    do_logout_compat()
-    st.success(f"Bem-vindo, {name} — Grau: {user_role.title()}")
-    st.caption(f"📁 Catálogo: {CATALOGO_PATH}")
-    if st.button("Limpar cache de dados"):
-        st.cache_data.clear()
-        st.rerun()
+user_role = st.session_state.get("user_role", "aprendiz")
 
 ensure_dirs()
 
