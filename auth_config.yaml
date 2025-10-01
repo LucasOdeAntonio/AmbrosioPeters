@@ -3,17 +3,17 @@ credentials:
     aprendiz:
       name: "aprendiz"
       email: "aprendiz@example.com"
-      password: "$2b$12$A5z1cH.S9dAdmsbYvajwvuy1qyhltny6Ocbxdu6gFBiK13HSySLPG"
+      password: "boaz"
       role: "aprendiz"
     companheiro:
       name: "companheiro"
       email: "companheiro@example.com"
-      password: "$2b$12$TLP4STc4U8LZX97h7t3GnuRIUQJr9Nv3drLOyF.hakcnTXIm7PAsu"
+      password: "testecompanheiro"
       role: "companheiro"
     mestre:
       name: "mestre"
       email: "lucas.epc@gmail.com"
-      password: "$2b$12$0fu5Vgs4hmxU2xWLqkfkZOsPi6tyTOK6uy13K8Qxmre8E38EcTbkW"
+      password: "mestremestre"
       role: "mestre"
 
 cookie:
