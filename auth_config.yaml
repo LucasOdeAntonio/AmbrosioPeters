@@ -8,12 +8,12 @@ credentials:
     companheiro:
       name: "companheiro"
       email: "companheiro@example.com"
-      password: "$2b$12$Eq68Tw0Qe.CGwdIu.LP2de0177MJfWSXwPsxsbRiWukelpAcU.omG"
+      password: "$2b$12$TLP4STc4U8LZX97h7t3GnuRIUQJr9Nv3drLOyF.hakcnTXIm7PAsu"
       role: "companheiro"
     mestre:
       name: "mestre"
       email: "lucas.epc@gmail.com"
-      password: "$$2b$12$6cskdlu91Kjzm3wsbd2TPO4tXprwMeHjTbpOL46wjvWZt9SX6HC.W"
+      password: "$2b$12$0fu5Vgs4hmxU2xWLqkfkZOsPi6tyTOK6uy13K8Qxmre8E38EcTbkW"
       role: "mestre"
 
 cookie:
