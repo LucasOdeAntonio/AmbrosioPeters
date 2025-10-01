@@ -302,12 +302,12 @@ def logout():
     st.rerun()
 
 with st.sidebar:
-    st.header("🔐 Acesso Restrito (sem criptografia)")
-    st.caption("Use os acessos por grau. As senhas são comparadas em texto plano conforme o arquivo YAML.")
+    st.header("Para uso dos membros da A.R.L.S Ambrósio Peters nº 4101")
+    st.caption("Use os acessos por grau. Caso tenha dúvidas, consulte o Venerável da Loja.")
 
     # Mostra o logo (opcional)
     try:
-        st.image(str((ASSETS_DIR/"LOGO.png").resolve()), width=120)
+        st.image(str((ASSETS_DIR/"LOGO.png").resolve()), width=200)
     except Exception:
         pass
 
